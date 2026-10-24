@@ -93,6 +93,44 @@ class FeedController extends Controller
                 ->save($cacheName, $found, $secondsToNextUnpublishedEpisode ?: DECADE);
         }
 
-        return $this->response->setXML($found);
+        return $this->feedResponse($found);
+    }
+
+    private function feedResponse(string $xml): ResponseInterface
+    {
+        $length = strlen($xml);
+        $response = $this->response->setXML($xml)
+            ->setHeader('Accept-Ranges', 'bytes')
+            ->setHeader('Content-Length', (string) $length);
+
+        // Range only applies to GET. Without validators, an If-Range request
+        // must receive the full representation rather than an unchecked slice.
+        $range = $this->request->getHeaderLine('Range');
+        if (strtoupper($this->request->getMethod()) !== 'GET'
+            || $this->request->getHeaderLine('If-Range') !== ''
+            || ! preg_match('/^bytes=(\d*)-(\d*)$/D', $range, $matches)
+            || ($matches[1] === '' && $matches[2] === '')) {
+            return $response;
+        }
+
+        if ($matches[1] === '') {
+            $start = max(0, $length - (int) $matches[2]);
+            $end = $length - 1;
+        } else {
+            $start = (int) $matches[1];
+            $end = $matches[2] === '' ? $length - 1 : min((int) $matches[2], $length - 1);
+        }
+
+        if ($start >= $length || $end < $start) {
+            return $response->setStatusCode(416)
+                ->setHeader('Content-Range', 'bytes */' . $length)
+                ->setHeader('Content-Length', '0')
+                ->setBody('');
+        }
+
+        return $response->setStatusCode(206)
+            ->setHeader('Content-Range', "bytes {$start}-{$end}/{$length}")
+            ->setHeader('Content-Length', (string) ($end - $start + 1))
+            ->setBody(substr($xml, $start, $end - $start + 1));
     }
 }
