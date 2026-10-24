@@ -12,6 +12,7 @@ namespace Modules\Media\Entities;
 
 use CodeIgniter\Files\File;
 use JamesHeinrich\GetID3\GetID3;
+use Modules\Media\FileManagers\FS;
 
 /**
  * @property float $duration
@@ -20,6 +21,21 @@ use JamesHeinrich\GetID3\GetID3;
 class Audio extends BaseMedia
 {
     protected string $type = 'audio';
+
+    public function getFileSize(): int
+    {
+        // ID3 updates can change the stored file after its media record was saved.
+        $fileManager = service('file_manager');
+        if ($fileManager instanceof FS) {
+            $path = $fileManager->getFileInput($this->file_key);
+            clearstatcache(true, $path);
+            if (is_file($path) && ($size = filesize($path)) !== false) {
+                return $size;
+            }
+        }
+
+        return (int) $this->attributes['file_size'];
+    }
 
     public function initFileProperties(): void
     {
