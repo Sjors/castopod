@@ -12,6 +12,7 @@ namespace Modules\Media\Entities;
 
 use CodeIgniter\Files\File;
 use GdImage;
+use RuntimeException;
 
 /**
  * @property array<string, array<string, int|string>> $sizes
@@ -144,7 +145,16 @@ class Image extends BaseMedia
             // Apple Podcasts requires images to be 72 dpi
             imageresolution($resizedImageResource, 72, 72);
 
-            $resizedImage->save($tempFilePath);
+            if ($name === 'feed') {
+                // The output must match its public extension and contain no alpha channel.
+                self::saveFeedImage(
+                    $resizedImageResource,
+                    $tempFilePath,
+                    strtolower(pathinfo($this->{$name . '_key'}, PATHINFO_EXTENSION))
+                );
+            } else {
+                $resizedImage->save($tempFilePath);
+            }
 
             $newImage = new File($tempFilePath, true);
 
@@ -154,6 +164,28 @@ class Image extends BaseMedia
 
         if ($tempImagePath !== '') {
             unlink($tempImagePath);
+        }
+    }
+
+    public static function saveFeedImage(GdImage $source, string $target, string $extension): void
+    {
+        $image = imagecreatetruecolor(imagesx($source), imagesy($source));
+        $white = imagecolorallocate($image, 255, 255, 255);
+        imagefill($image, 0, 0, $white);
+        imagealphablending($image, true);
+        imagecopy($image, $source, 0, 0, 0, 0, imagesx($source), imagesy($source));
+        imagesavealpha($image, false);
+        imageresolution($image, 72, 72);
+
+        $saved = match ($extension) {
+            'jpg', 'jpeg' => imagejpeg($image, $target, 95),
+            'png'   => imagepng($image, $target),
+            default => throw new RuntimeException('Unsupported feed artwork extension: ' . $extension),
+        };
+        imagedestroy($image);
+
+        if (! $saved) {
+            throw new RuntimeException('Could not save feed artwork: ' . $target);
         }
     }
 
