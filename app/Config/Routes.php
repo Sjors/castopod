@@ -120,6 +120,9 @@ $routes->group('@(:podcastHandle)', static function ($routes): void {
         $routes->get('discussion', 'EpisodeController::discussion/$1/$2', [
             'as' => 'episode-discussion',
         ]);
+        $routes->get('audio', 'EpisodeController::audio/$1/$2', [
+            'as' => 'episode-audio-tab',
+        ]);
         $routes->get('chapters', 'EpisodeController::chapters/$1/$2', [
             'as' => 'episode-chapters',
         ]);

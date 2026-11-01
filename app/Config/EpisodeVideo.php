@@ -43,7 +43,7 @@ class EpisodeVideo extends BaseConfig
             preg_match('/\A(?:naddr|nevent|note)1[023456789acdefghjklmnpqrstuvwxyz]+\z/', $identifier) === 1;
     }
 
-    public function getUrl(int $episodeId, string $podcastHandle, string $episodeSlug): ?string
+    public function getUrl(int $episodeId): ?string
     {
         $identifier = $this->getIdentifier($episodeId);
         if ($identifier === null) {
@@ -54,7 +54,7 @@ class EpisodeVideo extends BaseConfig
             'v'        => $identifier,
             'branding' => 0,
             'zaps'     => 0,
-            'back'     => route_to('episode-discussion', $podcastHandle, $episodeSlug),
+            'title'    => 0,
         ], '', '&', PHP_QUERY_RFC3986);
     }
 }

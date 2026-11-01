@@ -64,21 +64,38 @@ class EpisodeController extends BaseController
         return $this->{$method}(...$params);
     }
 
-    public function index(): RedirectResponse | string
+    public function index(): string
     {
         if ($this->episode->publication_status === 'published') {
-            $videoUrl = config('EpisodeVideo')->getUrl($this->episode->id, $this->podcast->handle, $this->episode->slug);
+            $videoUrl = config('EpisodeVideo')->getUrl($this->episode->id);
             if ($videoUrl !== null) {
-                return redirect()->to($videoUrl, 302)
-                    ->setHeader('Cache-Control', 'no-store');
+                return $this->renderEpisodePage('video', ['videoUrl' => $videoUrl]);
             }
         }
 
         return $this->discussion();
     }
 
-    /** Explicit audio/comments route, including when the episode opens as video by default. */
+    public function audio(): string
+    {
+        if (
+            $this->episode->publication_status === 'published' &&
+            config('EpisodeVideo')->getIdentifier($this->episode->id) !== null
+        ) {
+            return $this->renderEpisodePage('audio');
+        }
+
+        return $this->discussion();
+    }
+
+    /** Explicit comments route when video occupies the canonical episode page. */
     public function discussion(): string
+    {
+        return $this->renderEpisodePage('comments');
+    }
+
+    /** @param array<string, mixed> $extraData */
+    private function renderEpisodePage(string $page, array $extraData = []): string
     {
         // Prevent analytics hit when authenticated
         if (! auth()->loggedIn()) {
@@ -91,6 +108,7 @@ class EpisodeController extends BaseController
                 'page',
                 "podcast#{$this->podcast->id}",
                 "episode#{$this->episode->id}",
+                $page,
                 service('request')
                     ->getLocale(),
                 is_unlocked($this->podcast->handle) ? 'unlocked' : null,
@@ -104,7 +122,7 @@ class EpisodeController extends BaseController
                 'metatags' => get_episode_metatags($this->episode),
                 'podcast'  => $this->podcast,
                 'episode'  => $this->episode,
-            ];
+            ] + $extraData;
 
             $secondsToNextUnpublishedEpisode = (new EpisodeModel())->getSecondsToNextUnpublishedEpisode(
                 $this->podcast->id,
@@ -113,11 +131,11 @@ class EpisodeController extends BaseController
             if (auth()->loggedIn()) {
                 helper('form');
 
-                return view('episode/comments', $data);
+                return view('episode/' . $page, $data);
             }
 
             // The page cache is set to a decade so it is deleted manually upon podcast update
-            return view('episode/comments', $data, [
+            return view('episode/' . $page, $data, [
                 'cache'      => $secondsToNextUnpublishedEpisode ?: DECADE,
                 'cache_name' => $cacheName,
             ]);

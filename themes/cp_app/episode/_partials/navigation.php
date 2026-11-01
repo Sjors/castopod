@@ -23,12 +23,15 @@ if ($episode->publication_status === 'published') {
             'labelInfo' => $episode->transcript === null ? '&ndash;' : '✓',
         ],
     ];
-    $videoUrl = config('EpisodeVideo')->getUrl($episode->id, $podcast->handle, $episode->slug);
+    $videoUrl = config('EpisodeVideo')->getUrl($episode->id);
     if ($videoUrl !== null) {
         $navigationItems[0]['uri'] = route_to('episode-discussion', esc($podcast->handle), esc($episode->slug));
         array_unshift($navigationItems, [
-            'uri'   => $videoUrl,
+            'uri'   => route_to('episode', esc($podcast->handle), esc($episode->slug)),
             'label' => lang('Episode.video'),
+        ], [
+            'uri'   => route_to('episode-audio-tab', esc($podcast->handle), esc($episode->slug)),
+            'label' => lang('Episode.audio'),
         ]);
     }
 } else {
@@ -57,10 +60,10 @@ if ($episode->publication_status === 'published') {
 }
 
 ?>
-<nav class="sticky z-40 flex col-start-2 pt-4 shadow bg-elevated md:px-8 gap-x-2 md:gap-x-4 -top-4 rounded-conditional-b-xl">
+<nav class="sticky z-40 flex col-start-2 pt-4 shadow bg-elevated md:px-8 gap-x-2 md:gap-x-4 -top-4 rounded-conditional-b-xl" style="overflow-x:auto">
     <?php foreach ($navigationItems as $item): ?>
         <?php $isActive = url_is($item['uri']); ?>
-        <a href="<?= esc($item['uri'], 'attr') ?>" class="px-4 py-1 text-sm font-semibold uppercase focus:ring-accent border-b-4<?= $isActive ? ' border-b-4 text-black border-accent-base' : ' text-skin-muted hover:text-skin-base hover:border-subtle border-transparent' ?>"><?= $item['label'] ?><?php if (isset($item['labelInfo'])): ?><span class="px-2 ml-1 font-semibold rounded-full bg-base"><?= $item['labelInfo'] ?></span><?php endif; ?></a>
+        <a href="<?= esc($item['uri'], 'attr') ?>" style="flex-shrink:0;white-space:nowrap" class="px-4 py-1 text-sm font-semibold uppercase focus:ring-accent border-b-4<?= $isActive ? ' border-b-4 text-black border-accent-base' : ' text-skin-muted hover:text-skin-base hover:border-subtle border-transparent' ?>"><?= $item['label'] ?><?php if (isset($item['labelInfo'])): ?><span class="px-2 ml-1 font-semibold rounded-full bg-base"><?= $item['labelInfo'] ?></span><?php endif; ?></a>
     <?php endforeach; ?>
     <button type="button" class="p-2 ml-auto rotate-180 rounded-full md:hidden focus:ring-accent" data-sidebar-toggler="toggler" aria-label="<?= lang('Navigation.toggle_sidebar') ?>"><?= icon('menu-2-fill') ?></button>
 </nav>

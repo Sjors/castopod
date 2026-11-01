@@ -1,4 +1,5 @@
 <?= helper('page') ?>
+<?php $hasEpisodeVideo = $episode->publication_status === 'published' && config('EpisodeVideo')->getIdentifier($episode->id) !== null; ?>
 
 <!DOCTYPE html>
 <html lang="<?= service('request')
@@ -120,15 +121,17 @@
             </div>
         </div>
         <div class="z-10 inline-flex items-center text-white gap-x-4">
-            <play-episode-button
-                id="<?= $episode->id ?>"
-                imageSrc="<?= $episode->cover->thumbnail_url ?>"
-                title="<?= esc($episode->title) ?>"
-                podcast="<?= esc($episode->podcast->title) ?>"
-                src="<?= $episode->audio_web_url ?>"
-                mediaType="<?= $episode->audio->file_mimetype ?>"
-                playLabel="<?= lang('Common.play_episode_button.play') ?>"
-                playingLabel="<?= lang('Common.play_episode_button.playing') ?>"></play-episode-button>
+            <?php if (! $hasEpisodeVideo): ?>
+                <play-episode-button
+                    id="<?= $episode->id ?>"
+                    imageSrc="<?= $episode->cover->thumbnail_url ?>"
+                    title="<?= esc($episode->title) ?>"
+                    podcast="<?= esc($episode->podcast->title) ?>"
+                    src="<?= $episode->audio_web_url ?>"
+                    mediaType="<?= $episode->audio->file_mimetype ?>"
+                    playLabel="<?= lang('Common.play_episode_button.play') ?>"
+                    playingLabel="<?= lang('Common.play_episode_button.playing') ?>"></play-episode-button>
+            <?php endif; ?>
             <div class="text-xs">
                 <?= relative_time($episode->published_at) ?>
                 <span class="mx-1">•</span>
@@ -138,7 +141,7 @@
             </div>
         </div>
     </header>
-    <div class="col-start-2 px-8 py-4 text-white bg-header">
+    <div class="col-start-2 px-8 py-4 text-white bg-header" style="overflow-wrap:anywhere">
         <h2 class="text-xs font-bold tracking-wider uppercase whitespace-pre-line font-display"><?= lang('Episode.description') ?></h2>
         <?php if (substr_count($episode->description_markdown, "\n") > 6 || strlen($episode->description) > 500): ?>
             <SeeMore class="max-w-xl prose-sm text-white"><?= $episode->getDescriptionHtml('-+Website+-') ?></SeeMore>
