@@ -1,5 +1,7 @@
 <div class="mx-4 md:mx-8">
     <play-episode-button
+        load-paused
+        hidden
         id="<?= $episode->id ?>"
         imageSrc="<?= $episode->cover->thumbnail_url ?>"
         title="<?= esc($episode->title) ?>"

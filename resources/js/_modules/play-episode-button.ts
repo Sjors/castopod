@@ -27,6 +27,9 @@ export class PlayEpisodeButton extends LitElement {
   @property()
   playingLabel!: string;
 
+  @property({ type: Boolean, attribute: "load-paused" })
+  loadPaused = false;
+
   @property({ attribute: false })
   _castopodAudioPlayer!: HTMLDivElement;
 
@@ -80,6 +83,12 @@ export class PlayEpisodeButton extends LitElement {
     this._audio = this._castopodAudioPlayer.querySelector(
       "audio"
     ) as HTMLAudioElement;
+
+    if (this.loadPaused) {
+      this._showPlayer();
+      this._audio.preload = "metadata";
+      this._loadEpisode(false);
+    }
   }
 
   private _elementReady(selector: string) {
@@ -148,13 +157,17 @@ export class PlayEpisodeButton extends LitElement {
     this._playbackSpeed = playingEpisodeButton._playbackSpeed;
   }
 
-  private _loadEpisode(): void {
+  private _loadEpisode(autoplay = true): void {
     this._castopodAudioPlayer.dataset.episode = this.id;
 
     this._audio.src = this.src;
     this._audio.load();
     this._audio.playbackRate = this._playbackSpeed;
     for (const event of this._events) {
+      // Preparing the Audio tab must never install the canplay autoplay hook.
+      if (!autoplay && event.name === "canplay") {
+        continue;
+      }
       this._audio.addEventListener(event.name, event.onEvent, false);
     }
 
