@@ -39,6 +39,10 @@ $routes->get('/', 'HomeController', [
     'as' => 'home',
 ]);
 
+$routes->get('sitemap.xml', 'SitemapController::index', [
+    'as' => 'sitemap',
+]);
+
 $routes->get('.well-known/platforms', 'Platform');
 
 service('auth')
