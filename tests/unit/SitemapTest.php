@@ -123,15 +123,37 @@ class SitemapTest extends CIUnitTestCase
         $this->assertArrayHasKey(url_to('podcast-episodes', 'Handle'), $urls);
         $this->assertArrayHasKey(url_to('podcast-about', 'Handle'), $urls);
         $this->assertArrayHasKey(url_to('episode', 'Handle', 'episode-slug'), $urls);
+        $this->assertArrayNotHasKey(url_to('episode-transcript', 'Handle', 'episode-slug'), $urls);
         $this->assertSame(
             Time::parse(FakeSinglePodcastApiSeeder::episode()['updated_at'])->format(DATE_W3C),
             $urls[url_to('episode', 'Handle', 'episode-slug')],
         );
     }
 
+    public function testSitemapListsPublishedEpisodeTranscript(): void
+    {
+        $this->publishPodcast();
+        $this->attachTranscript();
+        $this->db->table('episodes')
+            ->where('id', 1)
+            ->update([
+                'published_at' => '2023-06-01 00:00:00',
+            ]);
+
+        $urls = $this->getSitemapUrls();
+        $transcriptUrl = url_to('episode-transcript', 'Handle', 'episode-slug');
+
+        $this->assertArrayHasKey($transcriptUrl, $urls);
+        $this->assertSame(
+            Time::parse(FakeSinglePodcastApiSeeder::episode()['updated_at'])->format(DATE_W3C),
+            $urls[$transcriptUrl],
+        );
+    }
+
     public function testSitemapIgnoresScheduledEpisodes(): void
     {
         $this->publishPodcast();
+        $this->attachTranscript();
         $this->db->table('episodes')
             ->where('id', 1)
             ->update([
@@ -142,6 +164,7 @@ class SitemapTest extends CIUnitTestCase
 
         $this->assertContains(url_to('podcast-activity', 'Handle'), $locs);
         $this->assertNotContains(url_to('episode', 'Handle', 'episode-slug'), $locs);
+        $this->assertNotContains(url_to('episode-transcript', 'Handle', 'episode-slug'), $locs);
     }
 
     private function publishPodcast(): void
@@ -150,6 +173,26 @@ class SitemapTest extends CIUnitTestCase
             ->where('id', 1)
             ->update([
                 'published_at' => '2022-06-13 08:00:00',
+            ]);
+    }
+
+    private function attachTranscript(): void
+    {
+        $transcript = FakeSinglePodcastApiSeeder::cover();
+        $transcript['id'] = 4;
+        $transcript['file_key'] = 'podcasts/Handle/episode-slug-transcript.vtt';
+        $transcript['file_size'] = 123;
+        $transcript['file_mimetype'] = 'text/vtt';
+        $transcript['file_metadata'] = null;
+        $transcript['type'] = 'transcript';
+        $transcript['language_code'] = 'en';
+
+        $this->db->table('media')
+            ->insert($transcript);
+        $this->db->table('episodes')
+            ->where('id', 1)
+            ->update([
+                'transcript_id' => 4,
             ]);
     }
 

@@ -50,6 +50,14 @@ class SitemapController extends Controller
 
                 foreach ($episodes as $episode) {
                     $this->addUrl($urlset, $episode->link, $episode->updated_at);
+
+                    if ($episode->transcript_id !== null) {
+                        $this->addUrl(
+                            $urlset,
+                            url_to('episode-transcript', $podcast->handle, $episode->slug),
+                            $episode->updated_at,
+                        );
+                    }
                 }
             }
 
