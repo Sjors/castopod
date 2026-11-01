@@ -1,27 +1,46 @@
-# Local episode Video tab
+# Local episode Video metadata
 
-This patch adds a Video tab to published episodes with an entry in
-`writable/episode-videos.json`. It opens the full-page static player on the same
-origin at `/video/`; it does not embed it in Castopod or add a catalog.
-Unmapped episodes and unpublished previews keep their current tabs.
+The video identifier is stored using Castopod's existing database-backed
+settings service: `EpisodeVideo.identifier`, scoped to `episode:<database ID>`.
+There is no new column, table, migration or relay-detection job. The record is
+independent of the episode slug. Do not modify an upstream table or migration.
 
-The mapping is a JSON object keyed by podcast handle and episode slug:
+After publishing the video, open the existing episode's edit page, paste its
+`naddr1…` (preferred), `nevent1…` or `note1…` identifier under **Published Nostr
+video**, and select **Save video link**. Clear it and save to restore audio only.
+This separate form uses the existing episode-edit permission and CSRF protection.
 
-```json
-{
-  "nado": {
-    "an-episode-slug": "naddr1..."
-  }
-}
+For the publishing workflow, the same operation is available locally:
+
+```sh
+php spark episodes:video --podcast nado --slug an-episode-slug --identifier naddr1...
+php spark episodes:video --podcast nado --slug an-episode-slug --clear
 ```
 
-Use a complete `naddr1…` (preferred for editable videos), `nevent1…` or `note1…`
-identifier. The static player's compiled channel allowlist decides whose videos
-can play; Castopod does no relay requests. A missing or invalid mapping file
-leaves the Video tab hidden. Updating the mapping may require clearing the
-episode page cache using the normal Castopod cache workflow.
+These commands write immediately; use them only for an authorized episode.
+They select by both podcast and slug, save through the settings service, and
+clear the episode/podcast caches. They do not change the audio, GUID, publication
+date or description, and perform no upload, relay lookup or Nostr publication.
+
+For a published episode with a video, **Video is the first tab**. Opening the
+normal episode URL redirects temporarily to the standalone `/video/` player.
+The explicit `/discussion` route retains the audio/comments page, and the
+player's **Audio / comments** link returns there. The redirect has `no-store`
+so clearing the setting restores the ordinary landing page. ActivityPub/JSON,
+RSS and the other episode routes are unaffected.
+
+Episodes without a valid video identifier have **no Video tab** and open the
+ordinary audio/comments page. Unpublished previews do not show the tab.
+The channel-restricted player remains responsible for signature verification,
+video availability, author restrictions and media playback. A stale stored
+identifier is not an availability probe; clear it when withdrawing the video.
+
+The settings data is covered by normal database backups. The PHP config class,
+admin/public templates, command and routes remain local patches to preserve
+during upgrades. Upstream migration changes need review as usual, but there is
+no local database schema change to conflict with them. If the patch is removed,
+its namespaced settings records can remain inert or be removed separately.
 
 Deploy the static player separately and route `/video/` to it in nginx before
-Castopod's PHP fallback. The player and the tab patch do not publish Nostr
-events or upload media. Keep demonstration content and its mapping off the
-production site until replaced with the podcast's actual videos.
+Castopod's PHP fallback. This work has only been prepared and tested locally;
+the unrelated public demo video must not be associated with a production episode.

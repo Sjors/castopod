@@ -117,6 +117,9 @@ $routes->group('@(:podcastHandle)', static function ($routes): void {
         $routes->get('activity', 'EpisodeController::activity/$1/$2', [
             'as' => 'episode-activity',
         ]);
+        $routes->get('discussion', 'EpisodeController::discussion/$1/$2', [
+            'as' => 'episode-discussion',
+        ]);
         $routes->get('chapters', 'EpisodeController::chapters/$1/$2', [
             'as' => 'episode-chapters',
         ]);

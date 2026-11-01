@@ -23,12 +23,13 @@ if ($episode->publication_status === 'published') {
             'labelInfo' => $episode->transcript === null ? '&ndash;' : '✓',
         ],
     ];
-    $videoUrl = config('EpisodeVideo')->getUrl($podcast->handle, $episode->slug);
+    $videoUrl = config('EpisodeVideo')->getUrl($episode->id, $podcast->handle, $episode->slug);
     if ($videoUrl !== null) {
-        $navigationItems[] = [
+        $navigationItems[0]['uri'] = route_to('episode-discussion', esc($podcast->handle), esc($episode->slug));
+        array_unshift($navigationItems, [
             'uri'   => $videoUrl,
             'label' => lang('Episode.video'),
-        ];
+        ]);
     }
 } else {
     $navigationItems = [

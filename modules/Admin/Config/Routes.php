@@ -269,6 +269,10 @@ $routes->group(
                             'as'     => 'episode-edit',
                             'filter' => 'permission:podcast#.episodes.edit',
                         ]);
+                        $routes->post('video', 'EpisodeController::attemptVideoEdit/$1/$2', [
+                            'as'     => 'episode-video-edit',
+                            'filter' => 'permission:podcast#.episodes.edit',
+                        ]);
                         $routes->post(
                             'edit',
                             'EpisodeController::attemptEdit/$1/$2',

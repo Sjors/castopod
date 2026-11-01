@@ -287,6 +287,17 @@
 
 </form>
 
+<form action="<?= route_to('episode-video-edit', $podcast->id, $episode->id) ?>" method="POST" class="flex flex-col w-full max-w-xl mt-8 gap-y-4">
+<?= csrf_field() ?>
+<Forms.Field
+    name="video_identifier"
+    label="<?= esc(lang('Episode.form.video_identifier')) ?>"
+    hint="<?= esc(lang('Episode.form.video_identifier_hint')) ?>"
+    value="<?= esc(config('EpisodeVideo')->getIdentifier($episode->id) ?? '') ?>"
+    maxlength="4096" />
+<Button type="submit" variant="secondary"><?= lang('Episode.form.video_submit') ?></Button>
+</form>
+
 <?php if ($episode->published_at === null): ?>
     <?php // @icon("delete-bin-fill")?>
     <Button class="mt-8" variant="danger" uri="<?= route_to('episode-delete', $podcast->id, $episode->id) ?>" iconLeft="delete-bin-fill"><?= lang('Episode.delete') ?></Button>    

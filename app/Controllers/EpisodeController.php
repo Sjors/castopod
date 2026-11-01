@@ -18,6 +18,7 @@ use App\Models\EpisodeModel;
 use App\Models\PodcastModel;
 use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\Exceptions\PageNotFoundException;
+use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\Response;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Embed;
@@ -63,7 +64,21 @@ class EpisodeController extends BaseController
         return $this->{$method}(...$params);
     }
 
-    public function index(): string
+    public function index(): RedirectResponse | string
+    {
+        if ($this->episode->publication_status === 'published') {
+            $videoUrl = config('EpisodeVideo')->getUrl($this->episode->id, $this->podcast->handle, $this->episode->slug);
+            if ($videoUrl !== null) {
+                return redirect()->to($videoUrl, 302)
+                    ->setHeader('Cache-Control', 'no-store');
+            }
+        }
+
+        return $this->discussion();
+    }
+
+    /** Explicit audio/comments route, including when the episode opens as video by default. */
+    public function discussion(): string
     {
         // Prevent analytics hit when authenticated
         if (! auth()->loggedIn()) {

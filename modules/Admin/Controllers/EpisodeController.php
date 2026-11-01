@@ -23,6 +23,7 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\I18n\Time;
+use Config\EpisodeVideo;
 use Modules\Media\Entities\Chapters;
 use Modules\Media\Entities\Transcript;
 use Modules\Media\Models\MediaModel;
@@ -281,6 +282,24 @@ class EpisodeController extends BaseController
             1 => $this->episode->title,
         ]);
         return view('episode/edit', $data);
+    }
+
+    public function attemptVideoEdit(): RedirectResponse
+    {
+        $identifier = $this->request->getPost('video_identifier');
+        if (! is_string($identifier) || (trim($identifier) !== '' && ! EpisodeVideo::isIdentifier(trim($identifier)))) {
+            return redirect()->back()->withInput()->with('errors', [
+                'video_identifier' => lang('Episode.form.video_identifier_invalid'),
+            ]);
+        }
+
+        config('EpisodeVideo')->setIdentifier($this->episode->id, $identifier);
+        (new EpisodeModel())->clearCache(['id' => $this->episode->id]);
+
+        return redirect()->route('episode-edit', [$this->podcast->id, $this->episode->id])->with(
+            'message',
+            lang('Episode.messages.editSuccess'),
+        );
     }
 
     public function attemptEdit(): RedirectResponse

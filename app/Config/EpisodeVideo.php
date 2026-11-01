@@ -5,33 +5,48 @@ declare(strict_types=1);
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
+use InvalidArgumentException;
 
-/** Local episode-to-video links; no database or public video lookup is needed. */
+/** Episode video metadata in the existing settings table; no schema changes. */
 class EpisodeVideo extends BaseConfig
 {
     public string $playerPath = '/video/';
 
-    /** JSON under writable/, keyed by podcast handle, then episode slug. */
-    public string $mapFile = 'episode-videos.json';
+    /** Default for an episode with no contextual setting. */
+    public ?string $identifier = null;
 
-    public function getUrl(string $podcastHandle, string $episodeSlug): ?string
+    public function getIdentifier(int $episodeId): ?string
     {
-        $path = WRITEPATH . $this->mapFile;
-        if (! is_file($path) || ! is_readable($path)) {
-            return null;
+        $value = service('settings')->get('EpisodeVideo.identifier', 'episode:' . $episodeId);
+
+        return is_string($value) && self::isIdentifier($value) ? $value : null;
+    }
+
+    public function setIdentifier(int $episodeId, ?string $identifier): void
+    {
+        $identifier = trim($identifier ?? '');
+        if ($identifier !== '' && ! self::isIdentifier($identifier)) {
+            throw new InvalidArgumentException('Expected a naddr, nevent or note video identifier.');
         }
 
-        $contents = file_get_contents($path);
-        if ($contents === false) {
-            return null;
-        }
+        // A contextual null also prevents a general setting from enabling videos on this episode.
+        service('settings')->set(
+            'EpisodeVideo.identifier',
+            $identifier === '' ? null : $identifier,
+            'episode:' . $episodeId,
+        );
+    }
 
-        $videos = json_decode($contents, true);
-        $identifier = is_array($videos) ? ($videos[$podcastHandle][$episodeSlug] ?? null) : null;
-        if (
-            ! is_string($identifier) ||
-            preg_match('/\A(?:naddr|nevent|note)1[023456789acdefghjklmnpqrstuvwxyz]+\z/', $identifier) !== 1
-        ) {
+    public static function isIdentifier(string $identifier): bool
+    {
+        return strlen($identifier) <= 4096 &&
+            preg_match('/\A(?:naddr|nevent|note)1[023456789acdefghjklmnpqrstuvwxyz]+\z/', $identifier) === 1;
+    }
+
+    public function getUrl(int $episodeId, string $podcastHandle, string $episodeSlug): ?string
+    {
+        $identifier = $this->getIdentifier($episodeId);
+        if ($identifier === null) {
             return null;
         }
 
@@ -39,6 +54,7 @@ class EpisodeVideo extends BaseConfig
             'v'        => $identifier,
             'branding' => 0,
             'zaps'     => 0,
+            'back'     => route_to('episode-discussion', $podcastHandle, $episodeSlug),
         ], '', '&', PHP_QUERY_RFC3986);
     }
 }
