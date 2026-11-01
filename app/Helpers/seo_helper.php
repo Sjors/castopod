@@ -79,43 +79,67 @@ if (! function_exists('get_podcast_metatags')) {
 }
 
 if (! function_exists('get_episode_metatags')) {
-    function get_episode_metatags(Episode $episode): string
+    function get_episode_metatags(Episode $episode, string $page = 'episode'): string
     {
-        $schema = new Schema(
-            new Thing(
-                props: [
-                    'url'             => url_to('episode', esc($episode->podcast->handle), $episode->slug),
-                    'name'            => $episode->title,
-                    'image'           => $episode->cover->feed_url,
-                    'description'     => $episode->description,
-                    'datePublished'   => $episode->published_at->format(DATE_ISO8601),
-                    'timeRequired'    => iso8601_duration($episode->audio->duration),
-                    'duration'        => iso8601_duration($episode->audio->duration),
-                    'associatedMedia' => new Thing(
-                        props: [
-                            'contentUrl' => $episode->audio_url,
-                        ],
-                        type: 'MediaObject'
-                    ),
-                    'partOfSeries' => new Thing(
-                        props: [
-                            'name' => $episode->podcast->title,
-                            'url'  => $episode->podcast->link,
-                        ],
-                        type: 'PodcastSeries'
-                    ),
-                ],
-                type: 'PodcastEpisode'
-            )
+        $episodeUrl = url_to('episode', esc($episode->podcast->handle), $episode->slug);
+        $isTranscriptPage = $page === 'transcript';
+        $canonicalUrl = $isTranscriptPage
+            ? url_to('episode-transcript', esc($episode->podcast->handle), $episode->slug)
+            : $episode->link;
+        $title = $isTranscriptPage
+            ? sprintf('%s: %s', lang('Episode.transcript'), $episode->title)
+            : $episode->title;
+        $description = $isTranscriptPage
+            ? sprintf('%s: %s', lang('Episode.transcript'), $episode->description)
+            : $episode->description;
+
+        $episodeSchema = new Thing(
+            props: [
+                'url'             => $episodeUrl,
+                'name'            => $episode->title,
+                'image'           => $episode->cover->feed_url,
+                'description'     => $episode->description,
+                'datePublished'   => $episode->published_at->format(DATE_ISO8601),
+                'timeRequired'    => iso8601_duration($episode->audio->duration),
+                'duration'        => iso8601_duration($episode->audio->duration),
+                'associatedMedia' => new Thing(
+                    props: [
+                        'contentUrl' => $episode->audio_url,
+                    ],
+                    type: 'MediaObject'
+                ),
+                'partOfSeries' => new Thing(
+                    props: [
+                        'name' => $episode->podcast->title,
+                        'url'  => $episode->podcast->link,
+                    ],
+                    type: 'PodcastSeries'
+                ),
+            ],
+            type: 'PodcastEpisode'
         );
+
+        $schema = new Schema($isTranscriptPage
+            ? new Thing(
+                props: [
+                    'url'          => $canonicalUrl,
+                    'name'         => $title,
+                    'description'  => $description,
+                    'dateModified' => $episode->updated_at->format(DATE_ISO8601),
+                    'inLanguage'   => $episode->podcast->language_code,
+                    'mainEntity'   => $episodeSchema,
+                ],
+                type: 'WebPage'
+            )
+            : $episodeSchema);
 
         $metatags = new MetaTags();
 
         $metatags
-            ->title($episode->title)
-            ->description(esc($episode->description))
+            ->title($title)
+            ->description(esc($description))
             ->image((string) $episode->cover->og_url, 'player')
-            ->canonical($episode->link)
+            ->canonical($canonicalUrl)
             ->og('site_name', esc(service('settings')->get('App.siteName')))
             ->og('image:width', (string) config('Images')->podcastCoverSizes['og']['width'])
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])

@@ -2,6 +2,10 @@
 
 <?= $this->section('content') ?>
 
+<Heading tagName="h2" size="large" class="px-2 mb-4">
+    <?= lang('Episode.transcript') ?>
+</Heading>
+
 <?php if (isset($captions)) : ?>
     <div class="flex flex-col gap-2">
         <?php // @icon("download-2-fill")?>

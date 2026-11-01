@@ -243,21 +243,23 @@ class EpisodeController extends BaseController
 
         if (! ($cachedView = cache($cacheName))) {
             // get transcript from json file
+            $transcript = $this->episode->transcript;
             $data = [
-                'metatags' => get_episode_metatags($this->episode),
-                'podcast'  => $this->podcast,
-                'episode'  => $this->episode,
+                'metatags' => get_episode_metatags(
+                    $this->episode,
+                    $transcript === null ? 'episode' : 'transcript',
+                ),
+                'podcast' => $this->podcast,
+                'episode' => $this->episode,
             ];
 
-            if ($this->episode->transcript !== null) {
-                $data['transcript'] = $this->episode->transcript;
+            if ($transcript !== null) {
+                $data['transcript'] = $transcript;
 
-                if ($this->episode->transcript->json_key !== null) {
+                if ($transcript->json_key !== null) {
                     /** @var FileManagerInterface $fileManager */
                     $fileManager = service('file_manager');
-                    $transcriptJsonString = (string) $fileManager->getFileContents(
-                        $this->episode->transcript->json_key
-                    );
+                    $transcriptJsonString = (string) $fileManager->getFileContents($transcript->json_key);
 
                     $data['captions'] = json_decode($transcriptJsonString, true);
                 }
