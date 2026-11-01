@@ -25,6 +25,7 @@ return [
     'activity' => 'Activity',
     'chapters' => 'Chapters',
     'transcript' => 'Transcript',
+    'video' => 'Video',
     'description' => 'Episode description',
     'number_of_comments' => '{numberOfComments, plural,
         one {# comment}
