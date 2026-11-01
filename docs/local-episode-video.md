@@ -22,15 +22,18 @@ They select by both podcast and slug, save through the settings service, and
 clear the episode/podcast caches. They do not change the audio, GUID, publication
 date or description, and perform no upload, relay lookup or Nostr publication.
 
-For a published episode with a video, **Video is the first tab**. Opening the
-normal episode URL redirects temporarily to the standalone `/video/` player.
-The explicit `/discussion` route retains the audio/comments page, and the
-player's **Audio / comments** link returns there. The redirect has `no-store`
-so clearing the setting restores the ordinary landing page. ActivityPub/JSON,
-RSS and the other episode routes are unaffected.
+For a published episode with a video, the first tabs are **Video, Audio,
+Comments**. The normal episode URL renders a responsive, same-origin iframe
+using the static `/video/` player. The `/audio` tab immediately shows Castopod's
+normal bottom player with metadata loaded and playback paused. Its bootstrap
+button is hidden and does not attach the canplay autoplay hook. Comments uses
+the explicit `/discussion` route. The header audio control is omitted on all
+tabs of video episodes. Each view has its own cache key. ActivityPub/JSON,
+RSS and the other episode routes retain their existing behavior.
 
-Episodes without a valid video identifier have **no Video tab** and open the
-ordinary audio/comments page. Unpublished previews do not show the tab.
+Episodes without a valid video identifier have **no Video or Audio tab** and
+retain their ordinary header audio button and comments page. Unpublished
+previews retain the ordinary layout.
 The channel-restricted player remains responsible for signature verification,
 video availability, author restrictions and media playback. A stale stored
 identifier is not an availability probe; clear it when withdrawing the video.
@@ -42,5 +45,17 @@ no local database schema change to conflict with them. If the patch is removed,
 its namespaced settings records can remain inert or be removed separately.
 
 Deploy the static player separately and route `/video/` to it in nginx before
-Castopod's PHP fallback. This work has only been prepared and tested locally;
-the unrelated public demo video must not be associated with a production episode.
+Castopod's PHP fallback. Configure the build's allowed channel and relays; the
+PHP patch contains no channel, episode or hostname. Do not deploy an unrelated
+demo channel. The iframe hides duplicate player branding/title and adds
+`(powered by Castopod and Nostube)` beneath it.
+
+This patch changes `resources/js/_modules/play-episode-button.ts`: rebuild and
+deploy frontend assets together with their matching Vite manifest. Keeping only
+the PHP files leaves the Audio tab's paused initialization unavailable. Preserve
+the existing fonts, icons and other required static assets. No database schema
+migration or Composer dependency update is required by this patch.
+
+The instance's deployed state, backup and upgrade-preservation instructions are
+recorded in the `castopod-maintenance` skill's patch register and the deployment
+record under `/home/dev/Nado/maintenance/video-20261101/` on dev.
