@@ -10,6 +10,8 @@ use App\Models\EpisodeModel;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
+use DOMDocument;
+use DOMXPath;
 
 class EpisodeMetatagsTest extends CIUnitTestCase
 {
@@ -88,6 +90,44 @@ class EpisodeMetatagsTest extends CIUnitTestCase
         $this->assertSame('https://example.com/@Handle/episodes/episode-slug/transcript', $schema['url']);
         $this->assertSame('PodcastEpisode', $schema['mainEntity']['@type']);
         $this->assertSame('https://example.com/@Handle/episodes/episode-slug', $schema['mainEntity']['url']);
+    }
+
+    public function testEpisodeAndTranscriptTextIsEscapedOnce(): void
+    {
+        $this->db->table('episodes')
+            ->where('id', 1)
+            ->update([
+                'description_html' => '<p>Keys &amp; &quot;quotes&quot; &lt;script&gt;example&lt;/script&gt;</p>',
+            ]);
+        service('settings')
+            ->set('App.siteName', 'Audio & Friends');
+
+        foreach (['episode', 'transcript'] as $page) {
+            $html = get_episode_metatags($this->getEpisode(), $page);
+            $xpath = $this->getXPath($html);
+            $description = 'Keys & "quotes" <script>example</script>';
+            $expected = $page === 'transcript' ? 'Transcript: ' . $description : $description;
+
+            $this->assertSame($expected, $xpath->evaluate('string(//meta[@name="description"]/@content)'));
+            $this->assertSame($expected, $xpath->evaluate('string(//meta[@property="og:description"]/@content)'));
+            $this->assertSame('Audio & Friends', $xpath->evaluate('string(//meta[@property="og:site_name"]/@content)'));
+            $this->assertSame(1, $xpath->query('//script')->length);
+            $schema = $this->getSchema($html);
+            $this->assertSame($expected, $schema['description']);
+            if ($page === 'transcript') {
+                $this->assertSame($description, $schema['mainEntity']['description']);
+            }
+        }
+    }
+
+    private function getXPath(string $html): DOMXPath
+    {
+        $document = new DOMDocument();
+        $document->loadHTML(
+            '<!DOCTYPE html><html><head><meta charset="UTF-8">' . $html . '</head><body></body></html>'
+        );
+
+        return new DOMXPath($document);
     }
 
     private function getEpisode(): Episode

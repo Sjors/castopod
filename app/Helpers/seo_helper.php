@@ -81,6 +81,7 @@ if (! function_exists('get_podcast_metatags')) {
 if (! function_exists('get_episode_metatags')) {
     function get_episode_metatags(Episode $episode, string $page = 'episode'): string
     {
+        $episodeDescription = html_entity_decode($episode->description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $episodeUrl = url_to('episode', esc($episode->podcast->handle), $episode->slug);
         $isTranscriptPage = $page === 'transcript';
         $canonicalUrl = $isTranscriptPage
@@ -90,15 +91,15 @@ if (! function_exists('get_episode_metatags')) {
             ? sprintf('%s: %s', lang('Episode.transcript'), $episode->title)
             : $episode->title;
         $description = $isTranscriptPage
-            ? sprintf('%s: %s', lang('Episode.transcript'), $episode->description)
-            : $episode->description;
+            ? sprintf('%s: %s', lang('Episode.transcript'), $episodeDescription)
+            : $episodeDescription;
 
         $episodeSchema = new Thing(
             props: [
                 'url'             => $episodeUrl,
                 'name'            => $episode->title,
                 'image'           => $episode->cover->feed_url,
-                'description'     => $episode->description,
+                'description'     => $episodeDescription,
                 'datePublished'   => $episode->published_at->format(DATE_ISO8601),
                 'timeRequired'    => iso8601_duration($episode->audio->duration),
                 'duration'        => iso8601_duration($episode->audio->duration),
@@ -137,10 +138,10 @@ if (! function_exists('get_episode_metatags')) {
 
         $metatags
             ->title($title)
-            ->description(esc($description))
+            ->description($description)
             ->image((string) $episode->cover->og_url, 'player')
             ->canonical($canonicalUrl)
-            ->og('site_name', esc(service('settings')->get('App.siteName')))
+            ->og('site_name', service('settings')->get('App.siteName'))
             ->og('image:width', (string) config('Images')->podcastCoverSizes['og']['width'])
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])
             ->og('locale', $episode->podcast->language_code)
@@ -149,7 +150,7 @@ if (! function_exists('get_episode_metatags')) {
             ->meta('article:published_time', $episode->published_at->format(DATE_ISO8601))
             ->meta('article:modified_time', $episode->updated_at->format(DATE_ISO8601))
             ->twitter('audio:partner', $episode->podcast->publisher ?? '')
-            ->twitter('audio:artist_name', esc($episode->podcast->owner_name))
+            ->twitter('audio:artist_name', $episode->podcast->owner_name)
             ->twitter('player', $episode->getEmbedUrl('light'))
             ->twitter('player:width', (string) config('Embed')->width)
             ->twitter('player:height', (string) config('Embed')->height)
