@@ -90,9 +90,8 @@ final class EpisodePageSeoTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
-        Services::resetSingle('settings');
-        Services::resetSingle('vite');
         parent::tearDown();
+        $this->resetServices();
     }
 
     public function testEpisodeUsesPodcastLanguageAndKeepsIndexableCanonical(): void
