@@ -64,7 +64,7 @@ class EpisodeMetatagsTest extends CIUnitTestCase
     {
         $metatags = get_episode_metatags($this->getEpisode());
 
-        $this->assertStringContainsString('<title>Episode title</title>', $metatags);
+        $this->assertStringContainsString('<title>Episode title • Title</title>', $metatags);
         $this->assertStringContainsString(
             '<link rel="canonical" href="https://example.com/@Handle/episodes/episode-slug" />',
             $metatags,
@@ -79,7 +79,7 @@ class EpisodeMetatagsTest extends CIUnitTestCase
     {
         $metatags = get_episode_metatags($this->getEpisode(), 'transcript');
 
-        $this->assertStringContainsString('<title>Transcript: Episode title</title>', $metatags);
+        $this->assertStringContainsString('<title>Transcript: Episode title • Title</title>', $metatags);
         $this->assertStringContainsString(
             '<link rel="canonical" href="https://example.com/@Handle/episodes/episode-slug/transcript" />',
             $metatags,

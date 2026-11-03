@@ -87,9 +87,10 @@ if (! function_exists('get_episode_metatags')) {
         $canonicalUrl = $isTranscriptPage
             ? url_to('episode-transcript', esc($episode->podcast->handle), $episode->slug)
             : $episode->link;
+        $episodeTitle = sprintf('%s • %s', $episode->title, $episode->podcast->title);
         $title = $isTranscriptPage
-            ? sprintf('%s: %s', lang('Episode.transcript'), $episode->title)
-            : $episode->title;
+            ? sprintf('%s: %s', lang('Episode.transcript'), $episodeTitle)
+            : $episodeTitle;
         $description = $isTranscriptPage
             ? sprintf('%s: %s', lang('Episode.transcript'), $episodeDescription)
             : $episodeDescription;
