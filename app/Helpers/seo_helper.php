@@ -19,6 +19,8 @@ use Modules\Fediverse\Entities\PreviewCard;
  * @link       https://castopod.org/
  */
 
+helper('url');
+
 if (! function_exists('get_podcast_metatags')) {
     function get_podcast_metatags(Podcast $podcast, string $page): string
     {
@@ -61,7 +63,7 @@ if (! function_exists('get_podcast_metatags')) {
             ->og('image:width', (string) config('Images')->podcastCoverSizes['og']['width'])
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])
             ->og('locale', $podcast->language_code)
-            ->og('site_name', esc(service('settings')->get('App.siteName')))
+            ->og('site_name', esc(web_site_setting('App.siteName')))
             ->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
@@ -116,7 +118,7 @@ if (! function_exists('get_episode_metatags')) {
             ->description(esc($episode->description))
             ->image((string) $episode->cover->og_url, 'player')
             ->canonical($episode->link)
-            ->og('site_name', esc(service('settings')->get('App.siteName')))
+            ->og('site_name', esc(web_site_setting('App.siteName')))
             ->og('image:width', (string) config('Images')->podcastCoverSizes['og']['width'])
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])
             ->og('locale', $episode->podcast->language_code)
@@ -208,7 +210,7 @@ if (! function_exists('get_post_metatags')) {
             ->description($post->message)
             ->image($post->actor->avatar_image_url)
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')))
+            ->og('site_name', esc(web_site_setting('App.siteName')))
             ->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
@@ -253,7 +255,7 @@ if (! function_exists('get_episode_comment_metatags')) {
             ->description($episodeComment->message)
             ->image($episodeComment->actor->avatar_image_url)
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')))
+            ->og('site_name', esc(web_site_setting('App.siteName')))
             ->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
@@ -280,7 +282,7 @@ if (! function_exists('get_follow_metatags')) {
             ->description($actor->summary)
             ->image($actor->avatar_image_url)
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')));
+            ->og('site_name', esc(web_site_setting('App.siteName')));
 
         return $metatags->__toString();
     }
@@ -297,7 +299,7 @@ if (! function_exists('get_remote_actions_metatags')) {
             ->description($post->message)
             ->image($post->actor->avatar_image_url)
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')));
+            ->og('site_name', esc(web_site_setting('App.siteName')));
 
         return $metatags->__toString();
     }
@@ -308,11 +310,11 @@ if (! function_exists('get_home_metatags')) {
     {
         $metatags = new MetaTags();
         $metatags
-            ->title(service('settings')->get('App.siteName'))
-            ->description(esc(service('settings')->get('App.siteDescription')))
+            ->title(web_site_setting('App.siteName'))
+            ->description(esc(web_site_setting('App.siteDescription')))
             ->image(get_site_icon_url('512'))
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')));
+            ->og('site_name', esc(web_site_setting('App.siteName')));
 
         return $metatags->__toString();
     }
@@ -324,14 +326,12 @@ if (! function_exists('get_page_metatags')) {
         $metatags = new MetaTags();
         $metatags
             ->title(
-                $page->title . service('settings')->get('App.siteTitleSeparator') . service(
-                    'settings'
-                )->get('App.siteName')
+                $page->title . service('settings')->get('App.siteTitleSeparator') . web_site_setting('App.siteName')
             )
-            ->description(esc(service('settings')->get('App.siteDescription')))
+            ->description(esc(web_site_setting('App.siteDescription')))
             ->image(get_site_icon_url('512'))
             ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')));
+            ->og('site_name', esc(web_site_setting('App.siteName')));
 
         return $metatags->__toString();
     }

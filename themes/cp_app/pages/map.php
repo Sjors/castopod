@@ -5,10 +5,9 @@
 
 <head>
     <meta charset="UTF-8"/>
-    <title><?= lang('Page.map.title') . service('settings')->get('App.siteTitleSeparator') . esc(service('settings')->get('App.siteName')) ?></title>
+    <title><?= lang('Page.map.title') . service('settings')->get('App.siteTitleSeparator') . esc(web_site_setting('App.siteName')) ?></title>
     <meta name="description" content="<?= lang('Page.map.description', [
-        'siteName' => esc(service('settings')
-            ->get('App.siteName')),
+        'siteName' => esc(web_site_setting('App.siteName')),
     ]) ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" type="image/x-icon" href="<?= get_site_icon_url('ico') ?>" />

@@ -50,11 +50,11 @@ class WebmanifestController extends Controller
 
     public function index(): ResponseInterface
     {
-        helper('misc');
+        helper(['misc', 'url']);
 
         $webmanifest = [
-            'name'        => esc(service('settings') ->get('App.siteName')),
-            'description' => esc(service('settings') ->get('App.siteDescription')),
+            'name'        => esc(web_site_setting('App.siteName')),
+            'description' => esc(web_site_setting('App.siteDescription')),
             'lang'        => service('request')
                 ->getLocale(),
             'start_url'        => base_url(),

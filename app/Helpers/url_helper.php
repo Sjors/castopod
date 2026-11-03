@@ -91,3 +91,26 @@ if (! function_exists('web_cache_key')) {
         return $key . '_web#' . md5(base_url());
     }
 }
+
+if (! function_exists('web_site_setting')) {
+    /** Select hub branding without overwriting the dedicated site's settings. */
+    function web_site_setting(string $key): string
+    {
+        $web = config('PodcastWeb');
+        if ($web->hubURL !== '' && $web->hubName !== '' && $web->isHub(base_url())) {
+            $value = match ($key) {
+                'App.siteName'          => $web->hubName,
+                'App.homeTitle'         => $web->hubTitle,
+                'App.siteDescription'   => $web->hubDescription,
+                'App.siteAlternateName' => $web->hubAlternateName,
+                default                 => null,
+            };
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return (string) service('settings')
+            ->get($key);
+    }
+}

@@ -40,10 +40,8 @@
         <h1 class="container flex items-center justify-between px-2 py-4 mx-auto">
             <a href="<?= route_to(
                 'home',
-            ) ?>" class="inline-flex items-baseline text-3xl font-semibold font-display"><?= service('settings')
-        ->get('App.siteName') === 'Castopod' ? 'castopod' .
-    svg('castopod-logo-base', 'h-6 ml-2') : esc(service('settings')
-        ->get('App.siteName')) ?></a>
+            ) ?>" class="inline-flex items-baseline text-3xl font-semibold font-display"><?= web_site_setting('App.siteName') === 'Castopod' ? 'castopod' .
+    svg('castopod-logo-base', 'h-6 ml-2') : esc(web_site_setting('App.siteName')) ?></a>
         </h1>
     </header>
     <main class="container flex-1 px-4 py-10 mx-auto">
