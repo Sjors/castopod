@@ -142,6 +142,8 @@ if (! function_exists('get_episode_metatags')) {
             ->description($description)
             ->image((string) $episode->cover->og_url, 'player')
             ->canonical($canonicalUrl)
+            ->og('url', $canonicalUrl)
+            ->og('type', 'article')
             ->og('site_name', service('settings')->get('App.siteName'))
             ->og('image:width', (string) config('Images')->podcastCoverSizes['og']['width'])
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])

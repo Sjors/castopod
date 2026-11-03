@@ -92,6 +92,19 @@ class EpisodeMetatagsTest extends CIUnitTestCase
         $this->assertSame('https://example.com/@Handle/episodes/episode-slug', $schema['mainEntity']['url']);
     }
 
+    public function testOpenGraphIdentityUsesEachPagesCanonical(): void
+    {
+        $episode = $this->getEpisode();
+        foreach (['episode', 'transcript'] as $page) {
+            $xpath = $this->getXPath(get_episode_metatags($episode, $page));
+            $expected = $episode->link . ($page === 'transcript' ? '/transcript' : '');
+
+            $this->assertSame($expected, $xpath->evaluate('string(//meta[@property="og:url"]/@content)'));
+            $this->assertSame('article', $xpath->evaluate('string(//meta[@property="og:type"]/@content)'));
+            $this->assertSame($expected, $xpath->evaluate('string(//link[@rel="canonical"]/@href)'));
+        }
+    }
+
     public function testEpisodeAndTranscriptTextIsEscapedOnce(): void
     {
         $this->db->table('episodes')
