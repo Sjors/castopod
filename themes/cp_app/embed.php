@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <!-- embeddable player: not to be indexed on its own, only within the pages embedding it -->
+    <meta name="robots" content="noindex, indexifembedded" />
     <title><?= esc($episode->title) ?></title>
     <meta name="description" content="<?= esc(
         $episode->description,

@@ -288,6 +288,7 @@ class EpisodeController extends BaseController
     public function embed(string $theme = 'light-transparent'): string
     {
         header('Content-Security-Policy: frame-ancestors http://*:* https://*:*');
+        $this->response->setHeader('X-Robots-Tag', 'noindex, indexifembedded');
 
         // Prevent analytics hit when authenticated
         if (! auth()->loggedIn()) {
