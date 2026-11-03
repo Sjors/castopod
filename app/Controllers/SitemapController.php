@@ -13,6 +13,7 @@ namespace App\Controllers;
 use App\Models\EpisodeModel;
 use App\Models\PageModel;
 use App\Models\PodcastModel;
+use CodeIgniter\Config\Factories;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\I18n\Time;
@@ -22,22 +23,32 @@ class SitemapController extends Controller
 {
     public function index(): ResponseInterface
     {
-        $cacheName = 'sitemap';
+        $web = Factories::get('config', 'PodcastWeb');
+        $values = $web === null ? [] : get_object_vars($web);
+        $cacheName = 'sitemap_web#' . md5(base_url()) . '_' .
+            md5(($values['hubURL'] ?? '') . ($values['domains'] ?? '{}'));
 
         if (! ($found = cache($cacheName))) {
             $urlset = new SimpleXMLElement(
                 '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>',
             );
 
-            $this->addUrl($urlset, url_to('home'));
-            $this->addUrl($urlset, url_to('credits'));
-            $this->addUrl($urlset, url_to('map'));
+            if ($web === null || ! method_exists($web, 'isHub') || $web->isHub(base_url())) {
+                $this->addUrl($urlset, url_to('home'));
+                $this->addUrl($urlset, url_to('credits'));
+                $this->addUrl($urlset, url_to('map'));
 
-            foreach ((new PageModel())->findAll() as $page) {
-                $this->addUrl($urlset, $page->link, $page->updated_at);
+                foreach ((new PageModel())->findAll() as $page) {
+                    $this->addUrl($urlset, $page->link, $page->updated_at);
+                }
             }
 
             foreach ((new PodcastModel())->getAllPodcasts() as $podcast) {
+                if ($web !== null && method_exists($web, 'servesPodcast') &&
+                    ! $web->servesPodcast($podcast->handle, base_url())) {
+                    continue;
+                }
+
                 $this->addUrl($urlset, $podcast->link, $podcast->updated_at);
                 $this->addUrl($urlset, url_to('podcast-episodes', $podcast->handle), $podcast->updated_at);
                 $this->addUrl($urlset, url_to('podcast-about', $podcast->handle), $podcast->updated_at);

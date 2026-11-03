@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Database\Seeds\FakeSinglePodcastApiSeeder;
+use CodeIgniter\Config\Factories;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -47,7 +48,7 @@ class SitemapTest extends CIUnitTestCase
         parent::setUp();
 
         cache()
-            ->delete('sitemap');
+            ->deleteMatching('sitemap*');
     }
 
     protected function tearDown(): void
@@ -55,7 +56,7 @@ class SitemapTest extends CIUnitTestCase
         parent::tearDown();
 
         cache()
-            ->delete('sitemap');
+            ->deleteMatching('sitemap*');
     }
 
     public function testSitemapIsValidXml(): void
@@ -165,6 +166,88 @@ class SitemapTest extends CIUnitTestCase
         $this->assertContains(url_to('podcast-activity', 'Handle'), $locs);
         $this->assertNotContains(url_to('episode', 'Handle', 'episode-slug'), $locs);
         $this->assertNotContains(url_to('episode-transcript', 'Handle', 'episode-slug'), $locs);
+    }
+
+    public function testSitemapCacheSeparatesOriginsWithoutDomainConfiguration(): void
+    {
+        $this->publishPodcast();
+        $app = config('App');
+        $originalBaseURL = $app->baseURL;
+        try {
+            $app->baseURL = 'https://first.example/';
+            $first = $this->getSitemapLocs();
+            $this->assertContains('https://first.example/@Handle', $first);
+            $app->baseURL = 'https://second.example/';
+            $second = $this->getSitemapLocs();
+            $this->assertContains('https://second.example/@Handle', $second);
+            $this->assertNotContains('https://first.example/@Handle', $second);
+            $app->baseURL = 'https://first.example/';
+            $this->assertSame($first, $this->getSitemapLocs());
+        } finally {
+            $app->baseURL = $originalBaseURL;
+        }
+    }
+
+    public function testDomainSitemapsSelectOnlyLocalShowsWithoutMixingCachedOrigins(): void
+    {
+        $web = Factories::get('config', 'PodcastWeb');
+        if ($web === null || ! property_exists($web, 'hubURL') || ! property_exists($web, 'domains')) {
+            $this->markTestSkipped('Optional podcast-domains integration is not installed.');
+        }
+
+        $this->publishPodcast();
+        $this->attachTranscript();
+        $this->db->table('episodes')
+            ->where('id', 1)
+            ->update([
+                'published_at' => '2023-06-01 00:00:00',
+            ]);
+        $other = $this->db->table('podcasts')
+            ->where('id', 1)
+            ->get()
+            ->getRowArray();
+        unset($other['id']);
+        $other['handle'] = 'Other';
+        $other['guid'] = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+        $other['title'] = 'Other podcast';
+        $actor = FakeSinglePodcastApiSeeder::actor();
+        unset($actor['id']);
+        $actor['uri'] = 'https://hub.example/@Other';
+        $actor['username'] = 'Other';
+        $this->db->table('fediverse_actors')
+            ->insert($actor);
+        $other['actor_id'] = $this->db->insertID();
+        $this->db->table('podcasts')
+            ->insert($other);
+        $app = config('App');
+        $originalBaseURL = $app->baseURL;
+        $web->hubURL = 'https://hub.example/';
+        $web->domains = '{"Handle":"https://show.example/"}';
+        try {
+            $app->baseURL = 'https://show.example/';
+            $show = $this->getSitemapLocs();
+            $this->assertContains('https://show.example/@Handle', $show);
+            $this->assertContains('https://show.example/@Handle/episodes/episode-slug/transcript', $show);
+            $this->assertNotContains('https://show.example/', $show);
+            $this->assertNotContains('https://show.example/@Other', $show);
+            $this->assertNotContains('https://show.example/credits', $show);
+            $app->baseURL = 'https://hub.example/';
+            $hub = $this->getSitemapLocs();
+            $this->assertContains('https://hub.example/', $hub);
+            $this->assertContains('https://hub.example/@Other', $hub);
+            $this->assertNotContains('https://hub.example/@Handle', $hub);
+            foreach ($hub as $url) {
+                $this->assertStringStartsWith('https://hub.example/', $url);
+            }
+
+            // Re-read without clearing caches to check both origins coexist.
+            $app->baseURL = 'https://show.example/';
+            $this->assertSame($show, $this->getSitemapLocs());
+        } finally {
+            $app->baseURL = $originalBaseURL;
+            $web->hubURL = '';
+            $web->domains = '{}';
+        }
     }
 
     private function publishPodcast(): void
