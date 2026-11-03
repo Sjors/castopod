@@ -223,6 +223,16 @@ class App extends BaseConfig
      */
     public string $siteName = 'Castopod';
 
+    /**
+     * Optional commonly used alternative to the site name.
+     */
+    public string $siteAlternateName = '';
+
+    /**
+     * Optional descriptive homepage title; defaults to the site name.
+     */
+    public string $homeTitle = '';
+
     public string $siteTitleSeparator = ' | ';
 
     public string $siteDescription = 'Castopod is an open-source hosting platform made for podcasters who want engage and interact with their audience.';

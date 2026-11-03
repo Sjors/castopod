@@ -51,6 +51,16 @@ class SettingsController extends BaseController
             service('settings')->set('App.siteName', $siteName);
         }
 
+        foreach ([
+            'home_title'          => 'App.homeTitle',
+            'site_alternate_name' => 'App.siteAlternateName',
+        ] as $field => $key) {
+            $value = $this->request->getPost($field);
+            if (is_string($value) && $value !== service('settings')->get($key)) {
+                service('settings')->set($key, trim($value));
+            }
+        }
+
         $siteDescription = $this->request->getPost('site_description');
         if ($siteDescription !== service('settings')->get('App.siteDescription')) {
             service('settings')->set('App.siteDescription', $siteDescription);

@@ -29,6 +29,18 @@
         required="true" />
 
     <Forms.Field
+        name="site_alternate_name"
+        label="<?= esc(lang('Settings.instance.site_alternate_name')) ?>"
+        hint="<?= esc(lang('Settings.instance.site_alternate_name_hint')) ?>"
+        value="<?= esc(service('settings')->get('App.siteAlternateName')) ?>" />
+
+    <Forms.Field
+        name="home_title"
+        label="<?= esc(lang('Settings.instance.home_title')) ?>"
+        hint="<?= esc(lang('Settings.instance.home_title_hint')) ?>"
+        value="<?= esc(service('settings')->get('App.homeTitle')) ?>" />
+
+    <Forms.Field
         as="Textarea"
         name="site_description"
         label="<?= esc(lang('Settings.instance.site_description')) ?>"

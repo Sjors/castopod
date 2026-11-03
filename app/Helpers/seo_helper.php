@@ -306,15 +306,36 @@ if (! function_exists('get_remote_actions_metatags')) {
 if (! function_exists('get_home_metatags')) {
     function get_home_metatags(): string
     {
+        $settings = service('settings');
+        $siteName = (string) $settings->get('App.siteName');
+        $homeTitle = trim((string) $settings->get('App.homeTitle'));
+        $alternateName = trim((string) $settings->get('App.siteAlternateName'));
+        $siteUrl = base_url();
+
+        $website = new Thing(
+            props: [
+                'name' => $siteName,
+                'url'  => $siteUrl,
+            ],
+            type: 'WebSite'
+        );
+
+        if ($alternateName !== '' && $alternateName !== $siteName) {
+            $website->__set('alternateName', $alternateName);
+        }
+
+        $schema = new Schema($website);
         $metatags = new MetaTags();
         $metatags
-            ->title(service('settings')->get('App.siteName'))
-            ->description(esc(service('settings')->get('App.siteDescription')))
+            ->title($homeTitle === '' ? $siteName : $homeTitle)
+            ->description((string) $settings->get('App.siteDescription'))
             ->image(get_site_icon_url('512'))
-            ->canonical((string) current_url())
-            ->og('site_name', esc(service('settings')->get('App.siteName')));
+            ->canonical($siteUrl)
+            ->og('url', $siteUrl)
+            ->og('type', 'website')
+            ->og('site_name', $siteName);
 
-        return $metatags->__toString();
+        return $metatags->__toString() . PHP_EOL . $schema->__toString();
     }
 }
 
