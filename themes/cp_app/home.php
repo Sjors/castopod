@@ -47,8 +47,8 @@
         </h1>
     </header>
     <main class="container flex-1 px-4 py-10 mx-auto">
-        <?php if (trim((string) service('settings')->get('App.siteDescription')) !== ''): ?>
-            <p class="mb-4"><?= esc(service('settings')->get('App.siteDescription')) ?></p>
+        <?php if (trim((string) site_identity_setting('App.siteDescription')) !== ''): ?>
+            <p class="mb-4"><?= esc(site_identity_setting('App.siteDescription')) ?></p>
         <?php endif; ?>
         <div class="flex flex-wrap items-center justify-between py-2 border-b border-subtle gap-x-4">
             <Heading tagName="h2" class="inline-block"><?= lang('Home.all_podcasts') ?> (<?= count(

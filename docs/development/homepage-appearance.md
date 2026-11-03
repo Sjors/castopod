@@ -51,3 +51,9 @@ language file retains upstream translation formatting rather than accepting a
 whole-file alignment rewrite from ECS. The PHP templates were syntax-checked
 and rendered by the homepage tests; no frontend rebuild or browser playback test
 was performed. Production settings, site icons and services were not changed.
+
+## Optional domain identity
+
+The homepage remains independent. If the podcast-domains topic is also installed,
+its optional identity provider supplies the hub's name, description, descriptive
+title and alternate name. Without that provider, existing settings are used.

@@ -303,13 +303,25 @@ if (! function_exists('get_remote_actions_metatags')) {
     }
 }
 
+if (! function_exists('site_identity_setting')) {
+    /** Allow an optional web-domain provider without requiring it. */
+    function site_identity_setting(string $key): string
+    {
+        if (function_exists('web_site_setting')) {
+            return (string) web_site_setting($key);
+        }
+
+        return (string) service('settings')
+            ->get($key);
+    }
+}
+
 if (! function_exists('get_home_metatags')) {
     function get_home_metatags(): string
     {
-        $settings = service('settings');
-        $siteName = (string) $settings->get('App.siteName');
-        $homeTitle = trim((string) $settings->get('App.homeTitle'));
-        $alternateName = trim((string) $settings->get('App.siteAlternateName'));
+        $siteName = site_identity_setting('App.siteName');
+        $homeTitle = trim(site_identity_setting('App.homeTitle'));
+        $alternateName = trim(site_identity_setting('App.siteAlternateName'));
         $siteUrl = base_url();
 
         $website = new Thing(
@@ -328,7 +340,7 @@ if (! function_exists('get_home_metatags')) {
         $metatags = new MetaTags();
         $metatags
             ->title($homeTitle === '' ? $siteName : $homeTitle)
-            ->description((string) $settings->get('App.siteDescription'))
+            ->description(site_identity_setting('App.siteDescription'))
             ->image(get_site_icon_url('512'))
             ->canonical($siteUrl)
             ->og('url', $siteUrl)
