@@ -56,7 +56,7 @@ abstract class BaseController extends Controller
     ): void {
         // Load here all helpers you want to be available in your controllers that extend BaseController.
         // Caution: Do not put the this below the parent::initController() call below.
-        $this->helpers = [...$this->helpers, 'svg', 'components', 'misc', 'seo', 'premium_podcasts'];
+        $this->helpers = [...$this->helpers, 'url', 'svg', 'components', 'misc', 'seo', 'premium_podcasts'];
 
         // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);

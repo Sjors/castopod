@@ -33,6 +33,8 @@ class FeedController extends Controller
 
     public function index(string $podcastHandle): ResponseInterface
     {
+        helper('url');
+
         $podcast = (new PodcastModel())->where('handle', $podcastHandle)
             ->first();
         if (! $podcast instanceof Podcast) {
@@ -80,6 +82,7 @@ class FeedController extends Controller
                 $subscription instanceof Subscription ? "subscription#{$subscription->id}" : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($found = cache($cacheName))) {
             $found = get_rss_feed($podcast, $serviceSlug, $subscription, $token);

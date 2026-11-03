@@ -95,6 +95,7 @@ class PostController extends FediversePostController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $data = [

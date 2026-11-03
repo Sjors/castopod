@@ -47,6 +47,7 @@ class PageController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($found = cache($cacheName))) {
             $data = [

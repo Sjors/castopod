@@ -76,6 +76,7 @@ class PodcastController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $data = [
@@ -124,6 +125,7 @@ class PodcastController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $stats = (new EpisodeModel())->getPodcastStats($this->podcast->id);
@@ -190,6 +192,7 @@ class PodcastController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             // Build navigation array

@@ -448,7 +448,7 @@ class EpisodeModel extends UuidModel
         cache()
             ->deleteMatching('page_credits_*');
         cache()
-            ->delete('episodes_markers');
+            ->deleteMatching('episodes_markers*');
 
         return $data;
     }

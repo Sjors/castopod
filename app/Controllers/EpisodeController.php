@@ -83,6 +83,7 @@ class EpisodeController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $data = [
@@ -132,6 +133,7 @@ class EpisodeController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $data = [
@@ -181,6 +183,7 @@ class EpisodeController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             // get chapters from json file
@@ -240,6 +243,7 @@ class EpisodeController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             // get transcript from json file
@@ -311,6 +315,7 @@ class EpisodeController extends BaseController
                 is_unlocked($this->podcast->handle) ? 'unlocked' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($cachedView = cache($cacheName))) {
             $themeData = EpisodeModel::$themes[$theme];
