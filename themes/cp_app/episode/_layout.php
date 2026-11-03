@@ -1,8 +1,7 @@
 <?= helper('page') ?>
 
 <!DOCTYPE html>
-<html lang="<?= service('request')
-    ->getLocale() ?>">
+<html lang="<?= esc($podcast->language_code) ?>">
 
 <head>
     <meta charset="UTF-8"/>
