@@ -25,6 +25,7 @@ class CreditsController extends BaseController
             '_',
             array_filter(['page', 'credits', $locale, auth()->loggedIn() ? 'authenticated' : null]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($found = cache($cacheName))) {
             $page = new Page([

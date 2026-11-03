@@ -28,6 +28,7 @@ class MapController extends BaseController
                     ->loggedIn() ? 'authenticated' : null,
             ]),
         );
+        $cacheName = web_cache_key($cacheName);
 
         if (! ($found = cache($cacheName))) {
             return view('pages/map', [], [
@@ -41,7 +42,7 @@ class MapController extends BaseController
 
     public function getEpisodesMarkers(): ResponseInterface
     {
-        $cacheName = 'episodes_markers';
+        $cacheName = web_cache_key('episodes_markers');
         if (! ($found = cache($cacheName))) {
             $episodes = (new EpisodeModel())
                 ->where('`published_at` <= UTC_TIMESTAMP()', null, false)

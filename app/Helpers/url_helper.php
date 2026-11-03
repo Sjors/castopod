@@ -81,3 +81,13 @@ if (! function_exists('extract_params_from_episode_uri')) {
         ];
     }
 }
+
+//--------------------------------------------------------------------
+
+if (! function_exists('web_cache_key')) {
+    /** Keep the original prefix so model invalidation clears every web origin. */
+    function web_cache_key(string $key): string
+    {
+        return $key . '_web#' . md5(base_url());
+    }
+}
