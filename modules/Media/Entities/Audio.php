@@ -21,6 +21,20 @@ class Audio extends BaseMedia
 {
     protected string $type = 'audio';
 
+    public function getFileMimetype(): string
+    {
+        $mimetype = (string) ($this->attributes['file_mimetype'] ?? '');
+        $extension = strtolower(pathinfo((string) $this->file_key, PATHINFO_EXTENSION));
+
+        // Keep M4A declarations consistent with Apple's RSS specification and
+        // the audio/x-m4a type used by common HTTP servers, including nginx.
+        if ($extension === 'm4a' && in_array($mimetype, ['audio/mp4', 'audio/m4a'], true)) {
+            return 'audio/x-m4a';
+        }
+
+        return $mimetype;
+    }
+
     public function initFileProperties(): void
     {
         parent::initFileProperties();
