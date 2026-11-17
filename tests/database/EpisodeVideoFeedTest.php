@@ -21,6 +21,8 @@ final class EpisodeVideoFeedTest extends CIUnitTestCase
 
     private const SHA = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
+    private const HLS_SHA = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+
     private const IDENTIFIER = 'naddr1qqxnzd3cxqmrzv3exgmr2wfeqgsxu35yyt0mwjjh8pcz4zprhxegz69t4wr9t74vk6zne58wzh0waycrqsqqqa28pccpzu';
 
     private const OTHER_IDENTIFIER = 'nevent1qqsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8gpp4mhxue69uhkummn9ekx7mqzyqalp';
@@ -133,6 +135,149 @@ final class EpisodeVideoFeedTest extends CIUnitTestCase
         $this->assertSame(0, $this->alternates()->length);
     }
 
+    public function testFeedAdvertisesHlsThenMp4AfterTheAudioEnclosure(): void
+    {
+        config('EpisodeVideo')->setEnclosure(1, self::IDENTIFIER, [
+            'hls' => $this->hls(),
+            'mp4' => $this->mp4(),
+        ]);
+
+        [$xpath, $alternates] = $this->query();
+        $this->assertSame(2, $alternates->length);
+        $this->assertSame(
+            ['alternateEnclosure', 'alternateEnclosure'],
+            array_map(
+                static fn (DOMNode $node): string => (string) $node->localName,
+                iterator_to_array($xpath->query('//item/enclosure/following-sibling::*[position() <= 2]')),
+            ),
+        );
+        $this->assertSame(['application/x-mpegURL', 'video/mp4'], $this->types());
+
+        $hls = $alternates->item(0);
+        $this->assertInstanceOf(DOMElement::class, $hls);
+        $this->assertSame('639', $hls->getAttribute('length'));
+        $this->assertSame('720', $hls->getAttribute('height'));
+        $this->assertSame('av01.0.05M.08,mp4a.40.2', $hls->getAttribute('codecs'));
+        $this->assertSame('Video (HLS)', $hls->getAttribute('title'));
+        $this->assertSame(
+            'https://blossom.example/' . self::HLS_SHA . '.m3u8',
+            $xpath->evaluate('string(podcast:source/@uri)', $hls),
+        );
+        $this->assertSame(
+            'sha256-ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0=',
+            $xpath->evaluate('string(podcast:integrity/@value)', $hls),
+        );
+    }
+
+    public function testIdentifierChangeDropsHlsAndMp4(): void
+    {
+        $video = config('EpisodeVideo');
+        $video->setEnclosure(1, self::IDENTIFIER, [
+            'hls' => $this->hls(),
+            'mp4' => $this->mp4(),
+        ]);
+
+        $video->setIdentifier(1, self::IDENTIFIER);
+        $this->assertSame(['application/x-mpegURL', 'video/mp4'], $this->types());
+
+        $video->setIdentifier(1, self::OTHER_IDENTIFIER);
+        $this->assertNull($video->getEnclosure(1));
+        $this->assertNull(service('settings')->get('EpisodeVideo.enclosure', 'episode:1'));
+        $this->assertSame([], $this->types());
+
+        $video->setIdentifier(1, self::IDENTIFIER);
+        $this->assertSame([], $this->types());
+    }
+
+    public function testOriginalMp4OnlyRecordIsStillRead(): void
+    {
+        $settings = service('settings');
+        $settings->set('EpisodeVideo.identifier', self::IDENTIFIER, 'episode:1');
+        // The shape stored before HLS support: flat MP4 fields next to the identifier.
+        $settings->set('EpisodeVideo.enclosure', json_encode([
+            'identifier' => self::IDENTIFIER,
+            'sources'    => ['https://blossom.example/' . self::SHA . '.mp4'],
+            'sha256'     => self::SHA,
+            'length'     => 987654321,
+            'type'       => 'video/mp4',
+            'height'     => 720,
+            'width'      => 1280,
+            'bitrate'    => null,
+            'codecs'     => null,
+        ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES), 'episode:1');
+
+        $record = config('EpisodeVideo')
+            ->getEnclosure(1);
+        $this->assertNull($record['hls'] ?? null);
+        $this->assertSame(987654321, $record['mp4']['length'] ?? null);
+        $this->assertSame(['video/mp4'], $this->types());
+
+        // An invalid stored record is ignored, not rendered.
+        $settings->set('EpisodeVideo.enclosure', json_encode([
+            'identifier' => self::IDENTIFIER,
+            'hls'        => null,
+            'mp4'        => null,
+        ], JSON_THROW_ON_ERROR), 'episode:1');
+        $this->assertNull(config('EpisodeVideo')->getEnclosure(1));
+        $this->assertSame([], $this->types());
+    }
+
+    public function testCommandReplacesTheEnclosureSet(): void
+    {
+        $base = self::COMMAND . ' --identifier ' . self::IDENTIFIER . ' ';
+        command($base . $this->hlsOptions() . ' --hls-type application/vnd.apple.mpegurl ' . $this->mp4Options());
+        $this->assertSame(['application/x-mpegURL', 'video/mp4'], $this->types());
+
+        $this->resetStreamFilterBuffer();
+        command(self::COMMAND . ' --show');
+        $shown = $this->getStreamFilterBuffer();
+        $this->assertStringContainsString('"type": "application/x-mpegURL"', $shown);
+        $this->assertStringContainsString('"sha256": "' . self::HLS_SHA . '"', $shown);
+        $this->assertStringContainsString('"sha256": "' . self::SHA . '"', $shown);
+
+        // Only MP4 options: the previous HLS stream is removed, not merged.
+        command($base . $this->mp4Options());
+        $this->assertSame(['video/mp4'], $this->types());
+
+        // Only HLS options: the previous MP4 is removed.
+        command($base . $this->hlsOptions());
+        $this->assertSame(['application/x-mpegURL'], $this->types());
+
+        // The identifier alone keeps the set saved for it.
+        command($base);
+        $this->assertSame(['application/x-mpegURL'], $this->types());
+
+        command(self::COMMAND . ' --clear');
+        $this->assertNull(service('settings')->get('EpisodeVideo.enclosure', 'episode:1'));
+        $this->assertSame([], $this->types());
+    }
+
+    public function testCommandRejectsInvalidHlsWithoutWriting(): void
+    {
+        $base = self::COMMAND . ' --identifier ' . self::IDENTIFIER . ' ';
+        $hls = $this->hlsOptions();
+        foreach ([
+            str_replace('https://blossom', 'http://blossom', $hls),
+            str_replace('--hls-size 639', '', $hls),
+            str_replace('--hls-sha256 ' . self::HLS_SHA, '', $hls),
+            '--hls-sha256 ' . self::HLS_SHA . ' --hls-size 639',
+            $hls . ' --hls-type video/mp4',
+            $hls . ' --hls-type application/x-mpegurl',
+            str_replace('--hls-height 720', '--hls-height 9000', $hls),
+            $hls . ' --hls-default 1',
+            // A valid HLS stream does not save an invalid MP4.
+            $hls . ' ' . str_replace('--mp4-size 987654321', '--mp4-size 0', $this->mp4Options()),
+        ] as $options) {
+            command($base . $options);
+            $this->assertNull(service('settings')->get('EpisodeVideo.identifier', 'episode:1'), $options);
+            $this->assertNull(service('settings')->get('EpisodeVideo.enclosure', 'episode:1'), $options);
+        }
+
+        // HLS options require an explicit identifier.
+        command(self::COMMAND . ' ' . $hls);
+        $this->assertNull(service('settings')->get('EpisodeVideo.enclosure', 'episode:1'));
+    }
+
     public function testRecordBoundToAnotherIdentifierIsNeverEmitted(): void
     {
         config('EpisodeVideo')->setEnclosure(1, self::IDENTIFIER, $this->mp4());
@@ -213,6 +358,38 @@ final class EpisodeVideoFeedTest extends CIUnitTestCase
     private function alternates(): DOMNodeList
     {
         return $this->query()[1];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function types(): array
+    {
+        return array_map(
+            static fn (DOMNode $node): string => $node instanceof DOMElement ? $node->getAttribute('type') : '',
+            iterator_to_array($this->alternates()),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function hls(): array
+    {
+        return [
+            'sources' => ['https://blossom.example/' . self::HLS_SHA . '.m3u8'],
+            'sha256'  => self::HLS_SHA,
+            'length'  => 639,
+            'type'    => 'application/x-mpegURL',
+            'height'  => 720,
+            'codecs'  => 'av01.0.05M.08,mp4a.40.2',
+        ];
+    }
+
+    private function hlsOptions(): string
+    {
+        return '--hls-url https://blossom.example/' . self::HLS_SHA . '.m3u8 --hls-sha256 ' . self::HLS_SHA
+            . ' --hls-size 639 --hls-height 720 --hls-codecs av01.0.05M.08,mp4a.40.2';
     }
 
     /**
