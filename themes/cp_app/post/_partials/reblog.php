@@ -8,7 +8,7 @@
         'actor' => esc($post->actor->display_name),
     ]) ?></p>
     <header class="flex px-6 py-4 gap-x-2">
-        <img src="<?= $post->actor->avatar_image_url ?>" alt="<?= esc($post->actor->display_name) ?>" class="w-10 h-10 rounded-full aspect-square" loading="lazy" />
+        <img src="<?= esc($post->actor->avatar_image_url, 'attr') ?>" alt="<?= esc($post->actor->display_name) ?>" class="w-10 h-10 rounded-full aspect-square" loading="lazy" />
         <div class="flex flex-col min-w-0">
             <a href="<?= $post->actor->uri ?>" class="flex items-baseline hover:underline" <?= $post->actor->is_local ? '' : 'target="_blank" rel="noopener noreferrer"' ?>>
                 <span class="mr-2 font-semibold truncate"><?= esc($post->actor->display_name) ?></span>

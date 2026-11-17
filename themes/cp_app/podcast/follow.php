@@ -39,7 +39,7 @@
         <div class="flex flex-col w-full -mt-24 overflow-hidden shadow max-w-fit bg-elevated rounded-xl">
             <img src="<?= get_podcast_banner_url($actor->podcast, 'small') ?>" alt="" class="w-full aspect-[3/1] bg-header" loading="lazy" />
             <div class="flex px-4 py-2">
-                <img src="<?= $actor->avatar_image_url ?>" alt="<?= esc($actor->display_name) ?>"
+                <img src="<?= esc($actor->avatar_image_url, 'attr') ?>" alt="<?= esc($actor->display_name) ?>"
                     class="w-16 h-16 mr-4 -mt-8 rounded-full ring-2 ring-background-elevated aspect-square" loading="lazy" />
                 <div class="flex flex-col">
                     <p class="font-semibold"><?= esc($actor->display_name) ?></p>

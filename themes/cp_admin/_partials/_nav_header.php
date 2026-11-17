@@ -87,7 +87,7 @@ if ($userPodcasts !== []) {
                 <?= icon('account-circle-fill', [
                     'class' => 'text-3xl opacity-60',
                 ]) ?>
-                <?= $userPodcasts === [] ? '' : '<img src="' . interact_as_actor()->avatar_image_url . '" class="absolute bottom-0 w-4 h-4 border rounded-full -right-1 border-navigation-bg" loading="lazy" />' ?>
+                <?= $userPodcasts === [] ? '' : '<img src="' . esc(interact_as_actor()->avatar_image_url, 'attr') . '" class="absolute bottom-0 w-4 h-4 border rounded-full -right-1 border-navigation-bg" loading="lazy" />' ?>
             </div>
             <span class="hidden sm:block"><?= esc(auth()->user()->username) ?></span>
             <?= icon('arrow-drop-down-fill', [

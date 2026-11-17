@@ -66,7 +66,7 @@
                         <div class="flex items-center shrink-0">
                             <span class="w-2 h-2 bg-red-500 rounded-full <?= $notification->read_at === null ? '' : 'invisible' ?>"></span>
                             <div class="relative ml-4">
-                                <img src="<?= $notification->actor->avatar_image_url ?>" alt="<?= esc($notification->actor->display_name) ?>" class="rounded-full shadow-inner w-14 h-14 aspect-square" loading="lazy" />
+                                <img src="<?= esc($notification->actor->avatar_image_url, 'attr') ?>" alt="<?= esc($notification->actor->display_name) ?>" class="rounded-full shadow-inner w-14 h-14 aspect-square" loading="lazy" />
                                 <span class="absolute bottom-0 w-6 h-6 rounded-full -right-2.5 flex justify-center items-center <?= $backgroundColor ?> group-hover:bg-white">
                                     <?php
                                         $icon = match ($notification->type) {

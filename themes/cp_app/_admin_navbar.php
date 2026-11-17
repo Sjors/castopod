@@ -84,7 +84,7 @@ if ($userPodcasts !== []) {
                     <?php if (can_user_interact()): ?>
                         <?= auth()
                         ->user()
-                        ->podcasts === [] ? '' : '<img src="' . interact_as_actor()->avatar_image_url . '" class="absolute bottom-0 w-4 h-4 border rounded-full -right-1 border-navigation-bg" loading="lazy" />' ?>
+                        ->podcasts === [] ? '' : '<img src="' . esc(interact_as_actor()->avatar_image_url, 'attr') . '" class="absolute bottom-0 w-4 h-4 border rounded-full -right-1 border-navigation-bg" loading="lazy" />' ?>
                     <?php endif; ?>
                 </div>
                 <?= esc(auth()->user()->username) ?>
