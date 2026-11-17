@@ -307,6 +307,8 @@ if (! function_exists('get_rss_feed')) {
             );
             $enclosure->addAttribute('length', (string) $episode->audio->file_size);
             $enclosure->addAttribute('type', $episode->audio->file_mimetype);
+            config('EpisodeVideo')
+                ->addAlternateEnclosure($item, $episode->id, $podcastNamespace);
 
             $item->addChild('guid', $episode->guid);
             $item->addChild('pubDate', $episode->published_at->format(DATE_RFC1123));
