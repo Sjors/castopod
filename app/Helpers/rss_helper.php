@@ -190,26 +190,29 @@ if (! function_exists('get_rss_feed')) {
                         PHP_URL_HOST
                     ) . '/auth/sign_up'
                 );
-                $castopodSocialSignUpelement = $castopodSocialElement->addChild(
-                    'socialSignUp',
-                    null,
-                    $podcastNamespace
-                );
-                $castopodSocialSignUpelement->addAttribute('priority', '1');
-                $castopodSocialSignUpelement->addAttribute(
-                    'homeUrl',
-                    parse_url((string) $socialPlatform->link_url, PHP_URL_SCHEME) . '://' . parse_url(
-                        (string) $socialPlatform->link_url,
-                        PHP_URL_HOST
-                    ) . '/public'
-                );
-                $castopodSocialSignUpelement->addAttribute(
-                    'signUpUrl',
-                    parse_url((string) $socialPlatform->link_url, PHP_URL_SCHEME) . '://' . parse_url(
-                        (string) $socialPlatform->link_url,
-                        PHP_URL_HOST
-                    ) . '/auth/sign_up'
-                );
+                // The sign-up hint belongs to the Castopod ActivityPub account, absent when federation is off.
+                if (config('Fediverse')->isEnabled()) {
+                    $castopodSocialSignUpelement = $castopodSocialElement->addChild(
+                        'socialSignUp',
+                        null,
+                        $podcastNamespace
+                    );
+                    $castopodSocialSignUpelement->addAttribute('priority', '1');
+                    $castopodSocialSignUpelement->addAttribute(
+                        'homeUrl',
+                        parse_url((string) $socialPlatform->link_url, PHP_URL_SCHEME) . '://' . parse_url(
+                            (string) $socialPlatform->link_url,
+                            PHP_URL_HOST
+                        ) . '/public'
+                    );
+                    $castopodSocialSignUpelement->addAttribute(
+                        'signUpUrl',
+                        parse_url((string) $socialPlatform->link_url, PHP_URL_SCHEME) . '://' . parse_url(
+                            (string) $socialPlatform->link_url,
+                            PHP_URL_HOST
+                        ) . '/auth/sign_up'
+                    );
+                }
             }
         }
 
