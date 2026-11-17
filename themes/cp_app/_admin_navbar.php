@@ -16,7 +16,8 @@ $userPodcasts = get_podcasts_user_can_interact_with(auth()->user()); ?>
         </div>
 
         <div class="inline-flex items-center h-full">
-            <button type="button" class="relative h-full px-2 focus:ring-accent focus:ring-inset" id="notifications-dropdown" data-dropdown="button" data-dropdown-target="notifications-dropdown-menu" aria-haspopup="true" aria-expanded="false" title="<?= lang('Notifications.title') ?>" data-tooltip="bottom">
+            <?php if (config('Fediverse')->isEnabled()): ?>
+<button type="button" class="relative h-full px-2 focus:ring-accent focus:ring-inset" id="notifications-dropdown" data-dropdown="button" data-dropdown-target="notifications-dropdown-menu" aria-haspopup="true" aria-expanded="false" title="<?= lang('Notifications.title') ?>" data-tooltip="bottom">
                 <?= icon('notification-2-fill', [
                     'class' => 'text-2xl opacity-80',
                 ]) ?>
@@ -68,6 +69,7 @@ if ($userPodcasts !== []) {
 }
 ?>
             <DropdownMenu id="notifications-dropdown-menu" labelledby="notifications-dropdown" items="<?= esc(json_encode($items)) ?>" placement="bottom-end"/>
+<?php endif; ?>
 
             <button
                 type="button"

@@ -62,11 +62,15 @@ if (! function_exists('get_podcast_metatags')) {
             ->og('image:height', (string) config('Images')->podcastCoverSizes['og']['height'])
             ->og('locale', $podcast->language_code)
             ->og('site_name', esc(service('settings')->get('App.siteName')))
-            ->push('link', [
+;
+
+        if (config('Fediverse')->isEnabled()) {
+            $metatags->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
                 'href' => url_to('podcast-activity', esc($podcast->handle)),
             ]);
+        }
 
         if ($podcast->payment_pointer) {
             $metatags->meta('monetization', $podcast->payment_pointer);
@@ -129,11 +133,15 @@ if (! function_exists('get_episode_metatags')) {
             ->twitter('player', $episode->getEmbedUrl('light'))
             ->twitter('player:width', (string) config('Embed')->width)
             ->twitter('player:height', (string) config('Embed')->height)
-            ->push('link', [
+;
+
+        if (config('Fediverse')->isEnabled()) {
+            $metatags->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
                 'href' => url_to('episode', $episode->podcast->handle, $episode->slug),
             ]);
+        }
 
         if ($episode->podcast->payment_pointer) {
             $metatags->meta('monetization', $episode->podcast->payment_pointer);
@@ -209,11 +217,15 @@ if (! function_exists('get_post_metatags')) {
             ->image($post->actor->avatar_image_url)
             ->canonical((string) current_url())
             ->og('site_name', esc(service('settings')->get('App.siteName')))
-            ->push('link', [
+;
+
+        if (config('Fediverse')->isEnabled()) {
+            $metatags->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
                 'href' => url_to('post', esc($post->actor->username), $post->id),
             ]);
+        }
 
         return $metatags->__toString() . PHP_EOL . $schema->__toString();
     }
@@ -254,7 +266,10 @@ if (! function_exists('get_episode_comment_metatags')) {
             ->image($episodeComment->actor->avatar_image_url)
             ->canonical((string) current_url())
             ->og('site_name', esc(service('settings')->get('App.siteName')))
-            ->push('link', [
+;
+
+        if (config('Fediverse')->isEnabled()) {
+            $metatags->push('link', [
                 'rel'  => 'alternate',
                 'type' => 'application/activity+json',
                 'href' => url_to(
@@ -264,6 +279,7 @@ if (! function_exists('get_episode_comment_metatags')) {
                     $episodeComment->id
                 ),
             ]);
+        }
 
         return $metatags->__toString() . PHP_EOL . $schema->__toString();
     }

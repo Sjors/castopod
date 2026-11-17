@@ -48,7 +48,7 @@ class EpisodePreviewController extends BaseController
     {
         helper('form');
 
-        return view('episode/preview-comments', [
+        return view(config('Fediverse')->isEnabled() ? 'episode/preview-comments' : 'episode/preview-audio', [
             'podcast' => $this->episode->podcast,
             'episode' => $this->episode,
         ]);

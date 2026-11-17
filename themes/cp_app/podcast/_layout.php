@@ -50,9 +50,9 @@
                 <h1 class="text-lg font-bold leading-none line-clamp-2 md:leading-none md:text-2xl font-display"><?= esc($podcast->title) ?><span class="ml-1 font-sans text-base font-normal">@<?= esc($podcast->handle) ?></span></h1>
                 <div class="">
                     <?= explicit_badge($podcast->parental_advisory === 'explicit', 'mr-1') ?>
-                    <span class="text-xs"><?= lang('Podcast.followers', [
+                    <?php if (config('Fediverse')->isEnabled()): ?><span class="text-xs"><?= lang('Podcast.followers', [
                         'numberOfFollowers' => $podcast->actor->followers_count,
-                    ]) ?></span>
+                    ]) ?></span><?php endif; ?>
                 </div>
             </div>
         </div>
@@ -62,7 +62,7 @@
                     'class' => 'mr-2 text-sm',
                 ]) ?><?= lang('Podcast.sponsor') ?></button>
             <?php endif; ?>
-            <?= anchor_popup(
+            <?php if (config('Fediverse')->isEnabled()): ?><?= anchor_popup(
                 route_to('follow', esc($podcast->handle)),
                 icon('social:castopod', [
                     'class' => 'mr-2 text-xl text-black/75 group-hover:text-black',
@@ -73,7 +73,7 @@
                     'height' => 620,
                     'class'  => 'group inline-flex items-center px-4 text-xs tracking-wider font-semibold text-black uppercase rounded-full leading-8 shadow focus:ring-accent bg-white',
                 ],
-            ) ?>
+            ) ?><?php endif; ?>
         </div>
     </header>
     <?= $this->include('podcast/_partials/navigation') ?>

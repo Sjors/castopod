@@ -32,6 +32,10 @@ class ActivityRequest
 
     public function __construct(string $uri, ?string $activityPayload = null)
     {
+        if (! config('Fediverse')->isEnabled()) {
+            throw new \RuntimeException('ActivityPub is disabled.');
+        }
+
         $this->request = service('curlrequest');
 
         if ($activityPayload !== null) {

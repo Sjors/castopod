@@ -73,6 +73,10 @@ $navigation = [
     ],
 ];
 
+if (! config('Fediverse')->isEnabled()) {
+    unset($navigation['fediverse']);
+}
+
 if (auth()->user()->can('podcasts.view')) {
     $navigation['podcasts']['count'] = (new PodcastModel())->countAllResults();
 } else {

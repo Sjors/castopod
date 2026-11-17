@@ -36,9 +36,11 @@ class Tasks extends BaseTasks
      */
     public function init(Scheduler $schedule): void
     {
-        $schedule->command('fediverse:broadcast')
-            ->everyMinute()
-            ->named('fediverse-broadcast');
+        if (config('Fediverse')->isEnabled()) {
+            $schedule->command('fediverse:broadcast')
+                ->everyMinute()
+                ->named('fediverse-broadcast');
+        }
 
         $schedule->command('websub:publish')
             ->everyMinute()

@@ -105,7 +105,7 @@ class Actor extends Entity
 
     public function getAvatarImageUrl(): string
     {
-        if ($this->attributes['avatar_image_url'] === null) {
+        if (! config('Fediverse')->isEnabled() || $this->attributes['avatar_image_url'] === null) {
             return base_url(config('Fediverse')->defaultAvatarImagePath);
         }
 
@@ -123,7 +123,7 @@ class Actor extends Entity
 
     public function getCoverImageUrl(): string
     {
-        if ($this->attributes['cover_image_url'] === null) {
+        if (! config('Fediverse')->isEnabled() || $this->attributes['cover_image_url'] === null) {
             return base_url(config('Fediverse')->defaultCoverImagePath);
         }
 

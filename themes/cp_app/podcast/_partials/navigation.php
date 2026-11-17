@@ -13,7 +13,10 @@ $navigationItems = [
         'uri'   => route_to('podcast-about', esc($podcast->handle)),
         'label' => lang('Podcast.about'),
     ],
-]
+];
+if (! config('Fediverse')->isEnabled()) {
+    array_shift($navigationItems);
+}
 ?>
 <nav class="sticky z-40 flex col-start-2 pt-8 shadow bg-elevated gap-x-2 md:gap-x-4 md:px-8 -top-6 md:-top-10 rounded-conditional-b-xl md:pt-12 ">
     <?php foreach ($navigationItems as $item): ?>

@@ -103,6 +103,10 @@ class ActivityModel extends UuidModel
         DateTimeInterface $scheduledAt = null,
         ?string $taskStatus = null
     ): BaseResult | int | string | false {
+        if (! config('Fediverse')->isEnabled()) {
+            return false;
+        }
+
         return $this->insert(
             [
                 'actor_id'        => $actorId,

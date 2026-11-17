@@ -56,9 +56,9 @@
                 <img class="w-8 h-8 rounded-full" src="<?= $episode->podcast->cover->tiny_url ?>" alt="<?= esc($episode->podcast->title) ?>" loading="lazy" />
                 <div class="flex flex-col overflow-hidden">
                     <span class="text-sm font-semibold leading-none truncate"><?= esc($episode->podcast->title) ?></span>
-                    <span class="text-xs"><?= lang('Podcast.followers', [
+                    <?php if (config('Fediverse')->isEnabled()): ?><span class="text-xs"><?= lang('Podcast.followers', [
                         'numberOfFollowers' => $podcast->actor->followers_count,
-                    ]) ?></span>
+                    ]) ?></span><?php endif; ?>
                 </div>
             </div>
         </a>
@@ -66,7 +66,7 @@
             <?php if (in_array(true, array_column($podcast->fundingPlatforms, 'is_visible'), true)): ?>
                 <button class="p-2 text-red-600 bg-white rounded-full shadow hover:text-red-500 focus:ring-accent" data-toggle="funding-links" data-toggle-class="hidden" title="<?= lang('Podcast.sponsor') ?>"><?= icon('heart-fill') ?></button>
             <?php endif; ?>
-            <?= anchor_popup(
+            <?php if (config('Fediverse')->isEnabled()): ?><?= anchor_popup(
                 route_to('follow', esc($podcast->handle)),
                 icon(
                     'social:castopod',
@@ -79,7 +79,7 @@
                     'height' => 620,
                     'class'  => 'group inline-flex items-center px-3 leading-8 text-xs tracking-wider font-semibold text-black uppercase rounded-full shadow focus:ring-accent bg-white',
                 ],
-            ) ?>
+            ) ?><?php endif; ?>
         </div>
     </nav>
     <header class="relative z-50 flex flex-col col-start-2 px-8 pt-8 pb-4 overflow-hidden bg-accent-base/75 gap-y-4">

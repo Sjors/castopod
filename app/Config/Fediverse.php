@@ -21,6 +21,12 @@ class Fediverse extends FediverseBaseConfig
      * ActivityPub Objects
      * --------------------------------------------------------------------
      */
+    /** Federation is deliberately disabled during recovery. */
+    public function isEnabled(): bool
+    {
+        return false;
+    }
+
     public string $noteObject = NoteObject::class;
 
     public string $defaultAvatarImagePath = 'castopod-avatar_thumbnail.webp';

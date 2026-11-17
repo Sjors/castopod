@@ -24,6 +24,10 @@ if (! function_exists('get_webfinger_data')) {
      */
     function get_webfinger_data(string $username, string $domain): ?object
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         $webfingerUri = new URI();
         $webfingerUri->setScheme('https');
         $webfingerUri->setHost($domain);
@@ -64,6 +68,10 @@ if (! function_exists('accept_follow')) {
      */
     function accept_follow(Actor $actor, Actor $targetActor, string $objectId): void
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return;
+        }
+
         $acceptActivity = new AcceptActivity();
 
         $object = new ObjectType();
@@ -111,6 +119,10 @@ if (! function_exists('send_activity_to_actor')) {
      */
     function send_activity_to_actor(Actor $actor, Actor $targetActor, string $activityPayload): void
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return;
+        }
+
         try {
             $acceptRequest = new ActivityRequest($targetActor->inbox_url, $activityPayload);
             if ($actor->private_key !== null) {
@@ -131,6 +143,10 @@ if (! function_exists('send_activity_to_followers')) {
      */
     function send_activity_to_followers(Actor $actor, string $activityPayload): void
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return;
+        }
+
         // TODO: send activities in parallel with https://www.php.net/manual/en/function.curl-multi-init.php
         foreach ($actor->followers as $follower) {
             send_activity_to_actor($actor, $follower, $activityPayload);
@@ -158,6 +174,10 @@ if (! function_exists('create_preview_card_from_url')) {
      */
     function create_preview_card_from_url(URI $url): ?PreviewCard
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         $embera = new Embera();
         $mediaData = $embera->getUrlData((string) $url);
 
@@ -208,6 +228,10 @@ if (! function_exists('get_or_create_preview_card_from_url')) {
      */
     function get_or_create_preview_card_from_url(URI $url): ?PreviewCard
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         // check if preview card has already been generated
         if (
             ($previewCard = model('PreviewCardModel', false)
@@ -228,6 +252,10 @@ if (! function_exists('get_or_create_actor_from_uri')) {
      */
     function get_or_create_actor_from_uri(string $actorUri): ?Actor
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         // check if actor exists in database already and return it
         if (($actor = model('ActorModel', false)->getActorByUri($actorUri)) instanceof Actor) {
             return $actor;
@@ -245,6 +273,10 @@ if (! function_exists('get_or_create_actor')) {
      */
     function get_or_create_actor(string $username, string $domain): ?Actor
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         // check if actor exists in database already and return it
         if (
             ($actor = model('ActorModel', false)
@@ -267,6 +299,10 @@ if (! function_exists('create_actor_from_uri')) {
      */
     function create_actor_from_uri(string $actorUri): ?Actor
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return null;
+        }
+
         $activityRequest = new ActivityRequest($actorUri);
         $actorResponse = $activityRequest->get();
         $actorPayload = json_decode((string) $actorResponse->getBody(), false, 512, JSON_THROW_ON_ERROR);

@@ -65,6 +65,9 @@ class EpisodeController extends BaseController
 
     public function index(): string
     {
+        // Without federation there are no comments: show the episode page with its audio player only
+        $view = config('Fediverse')->isEnabled() ? 'episode/comments' : 'episode/audio';
+
         // Prevent analytics hit when authenticated
         if (! auth()->loggedIn()) {
             $this->registerPodcastWebpageHit($this->episode->podcast_id);
@@ -76,6 +79,7 @@ class EpisodeController extends BaseController
                 'page',
                 "podcast#{$this->podcast->id}",
                 "episode#{$this->episode->id}",
+                $view === 'episode/audio' ? 'audio' : null,
                 service('request')
                     ->getLocale(),
                 is_unlocked($this->podcast->handle) ? 'unlocked' : null,
@@ -98,11 +102,11 @@ class EpisodeController extends BaseController
             if (auth()->loggedIn()) {
                 helper('form');
 
-                return view('episode/comments', $data);
+                return view($view, $data);
             }
 
             // The page cache is set to a decade so it is deleted manually upon podcast update
-            return view('episode/comments', $data, [
+            return view($view, $data, [
                 'cache'      => $secondsToNextUnpublishedEpisode ?: DECADE,
                 'cache_name' => $cacheName,
             ]);

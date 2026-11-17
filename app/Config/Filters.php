@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Config;
 
+use App\Filters\ActivityPubDisabledFilter;
 use App\Filters\AllowCorsFilter;
 use CodeIgniter\Config\BaseConfig;
 use CodeIgniter\Filters\CSRF;
@@ -27,6 +28,7 @@ class Filters extends BaseConfig
      * or [filter_name => [classname1, classname2, ...]]
      */
     public array $aliases = [
+        'activitypub-disabled' => ActivityPubDisabledFilter::class,
         'csrf'          => CSRF::class,
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
@@ -54,6 +56,7 @@ class Filters extends BaseConfig
      */
     public array $required = [
         'before' => [
+            'activitypub-disabled', // Before cached responses and all routing
             'forcehttps', // Force Global Secure Requests
             'pagecache',  // Web Page Caching
         ],

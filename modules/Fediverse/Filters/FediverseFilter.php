@@ -25,6 +25,10 @@ class FediverseFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $params = null)
     {
+        if (! config('Fediverse')->isEnabled()) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
         if ($params === null) {
             return;
         }

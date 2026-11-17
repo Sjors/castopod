@@ -58,6 +58,10 @@ class PodcastController extends BaseController
 
     public function activity(): string
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return $this->episodes();
+        }
+
         // Prevent analytics hit when authenticated
         if (! auth()->loggedIn()) {
             $this->registerPodcastWebpageHit($this->podcast->id);

@@ -17,6 +17,10 @@ class Broadcast extends BaseCommand
 
     public function run(array $params): void
     {
+        if (! config('Fediverse')->isEnabled()) {
+            return;
+        }
+
         helper('fediverse');
 
         // retrieve scheduled activities from database

@@ -141,12 +141,15 @@ if (! function_exists('get_rss_feed')) {
             $podcastingPlatformElement->addAttribute('url', $podcastingPlatform->link_url);
         }
 
-        $castopodSocialElement = $channel->addChild('social', null, $podcastNamespace);
-        $castopodSocialElement->addAttribute('priority', '1');
-        $castopodSocialElement->addAttribute('platform', 'castopod');
-        $castopodSocialElement->addAttribute('protocol', 'activitypub');
-        $castopodSocialElement->addAttribute('accountId', "@{$podcast->actor->username}@{$podcast->actor->domain}");
-        $castopodSocialElement->addAttribute('accountUrl', $podcast->link);
+        if (config('Fediverse')->isEnabled()) {
+            $castopodSocialElement = $channel->addChild('social', null, $podcastNamespace);
+            $castopodSocialElement->addAttribute('priority', '1');
+            $castopodSocialElement->addAttribute('platform', 'castopod');
+            $castopodSocialElement->addAttribute('protocol', 'activitypub');
+            $castopodSocialElement->addAttribute('accountId', "@{$podcast->actor->username}@{$podcast->actor->domain}");
+            $castopodSocialElement->addAttribute('accountUrl', $podcast->link);
+
+        }
 
         foreach ($podcast->social_platforms as $socialPlatform) {
             $socialElement = $channel->addChild('social', null, $podcastNamespace);
@@ -363,28 +366,31 @@ if (! function_exists('get_rss_feed')) {
             $episode->number &&
                 $item->addChild('episode', (string) $episode->number, $podcastNamespace);
 
-            // add link to episode comments as podcast-activity format
-            $comments = $item->addChild('comments', null, $podcastNamespace);
-            $comments->addAttribute('uri', url_to('episode-comments', $podcast->handle, $episode->slug));
-            $comments->addAttribute('contentType', 'application/podcast-activity+json');
+            if (config('Fediverse')->isEnabled()) {
+                // add link to episode comments as podcast-activity format
+                $comments = $item->addChild('comments', null, $podcastNamespace);
+                $comments->addAttribute('uri', url_to('episode-comments', $podcast->handle, $episode->slug));
+                $comments->addAttribute('contentType', 'application/podcast-activity+json');
 
-            if ($episode->getPosts()) {
-                $socialInteractUri = $episode->getPosts()[0]
-                    ->uri;
-                $socialInteractElement = $item->addChild('socialInteract', null, $podcastNamespace);
-                $socialInteractElement->addAttribute('uri', $socialInteractUri);
-                $socialInteractElement->addAttribute('priority', '1');
-                $socialInteractElement->addAttribute('platform', 'castopod');
-                $socialInteractElement->addAttribute('protocol', 'activitypub');
-                $socialInteractElement->addAttribute(
-                    'accountId',
-                    "@{$podcast->actor->username}@{$podcast->actor->domain}"
-                );
-                $socialInteractElement->addAttribute(
-                    'pubDate',
-                    $episode->getPosts()[0]
-                        ->published_at->format(DateTime::ISO8601)
-                );
+                if ($episode->getPosts()) {
+                    $socialInteractUri = $episode->getPosts()[0]
+                        ->uri;
+                    $socialInteractElement = $item->addChild('socialInteract', null, $podcastNamespace);
+                    $socialInteractElement->addAttribute('uri', $socialInteractUri);
+                    $socialInteractElement->addAttribute('priority', '1');
+                    $socialInteractElement->addAttribute('platform', 'castopod');
+                    $socialInteractElement->addAttribute('protocol', 'activitypub');
+                    $socialInteractElement->addAttribute(
+                        'accountId',
+                        "@{$podcast->actor->username}@{$podcast->actor->domain}"
+                    );
+                    $socialInteractElement->addAttribute(
+                        'pubDate',
+                        $episode->getPosts()[0]
+                            ->published_at->format(DateTime::ISO8601)
+                    );
+                }
+
             }
 
             if ($episode->transcript instanceof Transcript) {
